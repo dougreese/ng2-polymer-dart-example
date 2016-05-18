@@ -1,0 +1,84 @@
+<dom-module id="home_component">
+	<style is="custom-style">
+	  .flex {
+	    @apply(--layout-horizontal);
+	  }
+    :host {
+      display: block;
+      padding: 24px;
+      font-family: 'Roboto', 'Noto', sans-serif;
+      font-size: 14px;
+    }
+    .form-title {
+      margin-bottom: 20px;
+    }
+    .card {
+      background: white;
+      max-width: 400px;
+      min-width: 300px;
+      min-height: 300px;
+      padding: 0;
+      margin: 20px 20px auto 10px;
+    }
+    .card paper-header-panel {
+    	margin: 0;
+      min-height: 300px;
+      max-height: 300px
+    }
+    .card-content {
+    	padding: 16px;
+    }
+    .info {
+    	background-color: #0000ff;
+    }
+    .ok {
+    	background-color: #009900;
+    }
+    .warning {
+    	background-color: #ff9900;
+    }
+    .critical {
+    	background-color: #cc0000;
+    }
+	</style>
+
+	<h2>Home</h2>
+
+  <div class="layout horizontal around-justified wrap">
+	  <paper-material class="card flex">
+		  <paper-header-panel mode="standard">
+		  	<paper-toolbar class="info"><div>Info grow</div></paper-toolbar>
+			  <div class="card-content fit">
+			  	Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+			  </div>
+		  </paper-header-panel>
+		</paper-material>
+	  <paper-material class="card">
+		  <paper-header-panel mode="standard">
+		  	<paper-toolbar class="ok"><div>Ok static</div></paper-toolbar>
+			  <div class="card-content fit">
+			  	Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+			  </div>
+		  </paper-header-panel>
+		</paper-material>
+	  <paper-material class="card flex">
+		  <paper-header-panel mode="standard">
+		  	<paper-toolbar class="warning"><div>Warning grow</div></paper-toolbar>
+			  <div class="card-content fit">
+			  	Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+			  </div>
+		  </paper-header-panel>
+		</paper-material>
+	  <paper-material class="card flex">
+		  <paper-header-panel mode="standard">
+		  	<paper-toolbar class="critical"><div>Critical grow</div></paper-toolbar>
+			  <div class="card-content fit">
+			  	Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.<br/><br/>
+
+			  	Duis mattis, sapien ut cursus suscipit, lorem ligula tincidunt lectus, in bibendum orci nibh eu augue. Etiam at rutrum libero. Integer id nisi mi. Praesent dignissim libero sit amet arcu tincidunt mollis. Donec vitae semper ante, sed semper est. Maecenas bibendum egestas sapien. Quisque fringilla diam ac accumsan consectetur. Phasellus gravida mattis placerat. Ut lobortis, odio vitae euismod gravida, odio risus feugiat nunc, ut rutrum neque sapien sed arcu. Mauris pellentesque arcu quis massa auctor accumsan et vel odio. Suspendisse vitae ante varius, faucibus urna tempus, fermentum nulla. Mauris tristique id lectus et maximus. In hac habitasse platea dictumst. Etiam in tincidunt metus. Nullam quis scelerisque quam. Morbi pharetra tortor imperdiet eros volutpat vestibulum.
+			  </div>
+		  </paper-header-panel>
+		</paper-material>
+  </div>
+
+</dom-module>

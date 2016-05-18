@@ -1,0 +1,43 @@
+<dom-module id="my-app">
+<style>
+  .content {
+    padding: 15px;
+  }
+
+  .app-title {
+    text-align: center;
+  }
+  paper-toolbar {
+  	background: #6CA6CD;
+  }
+</style>
+
+<paper-drawer-panel>
+  <paper-header-panel drawer>
+    <paper-toolbar>
+      <h2 class="app-title">My App</h2>
+    </paper-toolbar>
+    <div>
+    	<side-nav></side-nav>
+    </div>
+  </paper-header-panel>
+
+  <paper-header-panel class="flex" main>
+    <paper-toolbar>
+      <paper-icon-button icon="menu" paper-drawer-toggle></paper-icon-button>
+      <div class="app-title"></div>
+      <div class="flex-auto" style="text-align: right;">
+        <paper-icon-button icon="alarm-on" (click)="test()"></paper-icon-button>
+        <paper-icon-button icon="help" (click)="test()"></paper-icon-button>
+        <paper-icon-button icon="settings" (click)="test()"></paper-icon-button>
+        <paper-icon-button icon="search" (click)="test()"></paper-icon-button>
+      </div>
+    </paper-toolbar>
+
+    <div class="content">
+      <router-outlet></router-outlet>
+    </div>
+  </paper-header-panel>
+
+</paper-drawer-panel>
+</dom-module>
