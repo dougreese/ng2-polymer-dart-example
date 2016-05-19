@@ -1,0 +1,78 @@
+{
+  "ngDeps": {
+    "1": "",
+    "3": [
+      {
+        "1": "package:angular2/core.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/paper_menu.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/paper_submenu.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/paper_item.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/iron_icons.dart",
+        "5": false
+      }
+    ],
+    "5": [
+      {
+        "1": "SideNavComponent"
+      }
+    ],
+    "6": "side_nav.dart",
+    "7": [
+      {
+        "1": "package:angular2/core.ngfactory.dart",
+        "4": "i0"
+      }
+    ]
+  },
+  "type": {
+    "SideNavComponent": {
+      "class": "Directive",
+      "isComponent": true,
+      "selector": "side-nav",
+      "exportAs": null,
+      "type": {
+        "class": "Type",
+        "name": "SideNavComponent",
+        "moduleUrl": "asset:ng2_polymer/lib/side_nav.dart",
+        "prefix": null,
+        "isHost": false,
+        "value": null,
+        "diDeps": []
+      },
+      "changeDetection": 5,
+      "inputs": {},
+      "outputs": {},
+      "hostListeners": {},
+      "hostProperties": {},
+      "hostAttributes": {},
+      "lifecycleHooks": [],
+      "template": {
+        "encapsulation": 0,
+        "template": "<dom-module id=\"side-nav\">\n\t<style type=\"text/css\">\n\t\t.nav-header {\n\t\t\tbackground: #708090;\n\t\t\tcolor: #fff;\n\t\t\theight: 100px;\n\t\t\tpadding: 16px;\n\t\t}\n\t\t.nav-content {\n\t\t\tbackground: #999999;\n\t\t}\n\t\ta:-webkit-any-link {\n\t\t    color: inherit;\n\t\t    text-decoration: inherit;\n\t\t    cursor: auto;\n\t\t}\n\t\tiron-icon {\n\t\t\tmargin-right: 16px !important;\n\t\t}\n\t\t.menu-item {\n\t\t\tfont-size: 13px !important;\n\n\t\t}\n\t</style>\n\n\t<div class=\"nav-header\">\n\t\tNav Header\n\t</div>\n\t<div class=\"nav-content\">\n\t\t<paper-menu>\n\t\t\t<paper-item>\n\t\t\t\t<div class=\"menu-item\"><a [routerLink]=\"['Home']\">\n\t\t\t\t\t<iron-icon icon=\"home\"></iron-icon>Home</a></div>\n\t\t\t</paper-item>\n\t\t\t<paper-item>\n\t\t\t\t<div class=\"menu-item\"><a [routerLink]=\"['Page1']\">\n\t\t\t\t\t<iron-icon icon=\"subject\" class=\"material-icons\"></iron-icon>Page 1</a></div>\n\t\t\t</paper-item>\n\t\t\t<paper-item>\n\t\t\t\t<div class=\"menu-item\"><a [routerLink]=\"['Page2']\">\n\t\t\t\t\t<iron-icon icon=\"warning\" class=\"material-icons\"></iron-icon>Page 2</a></div>\n\t\t\t</paper-item>\n\t\t\t<paper-item>\n\t\t\t\t<div class=\"menu-item\"><a [routerLink]=\"['Page3']\">\n\t\t\t\t\t<iron-icon icon=\"book\" class=\"material-icons\"></iron-icon>Page 3</a></div>\n\t\t\t</paper-item>\n\t\t\t<paper-submenu>\n\t\t    <paper-item class=\"menu-trigger\">\n\t\t\t\t\t<div class=\"menu-item\">\n\t\t\t    \t<iron-icon icon=\"settings\" class=\"material-icons\"></iron-icon>Settings</div>\n\t\t    </paper-item>\n\t\t    <paper-menu class=\"menu-content\">\n\t\t      <paper-item><div class=\"menu-item\">Topic 1</div></paper-item>\n\t\t      <paper-item><div class=\"menu-item\">Topic 2</div></paper-item>\n\t\t      <paper-item><div class=\"menu-item\">Topic 3</div></paper-item>\n\t\t    </paper-menu>\n\t\t  </paper-submenu>\n\t\t\t<paper-item>\n\t\t\t\t<div class=\"menu-item\"><a [routerLink]=\"['About']\">\n\t\t\t\t\t<iron-icon icon=\"info\" class=\"material-icons\"></iron-icon>About</a></div>\n\t\t\t</paper-item>\n\t\t</paper-menu>\n\t</div>\n</dom-module>",
+        "templateUrl": "asset:ng2_polymer/lib/side_nav.html",
+        "styles": [
+          "\n\t\t.nav-header {\n\t\t\tbackground: #708090;\n\t\t\tcolor: #fff;\n\t\t\theight: 100px;\n\t\t\tpadding: 16px;\n\t\t}\n\t\t.nav-content {\n\t\t\tbackground: #999999;\n\t\t}\n\t\ta:-webkit-any-link {\n\t\t    color: inherit;\n\t\t    text-decoration: inherit;\n\t\t    cursor: auto;\n\t\t}\n\t\tiron-icon {\n\t\t\tmargin-right: 16px !important;\n\t\t}\n\t\t.menu-item {\n\t\t\tfont-size: 13px !important;\n\n\t\t}\n\t"
+        ],
+        "styleUrls": [],
+        "ngContentSelectors": []
+      },
+      "providers": [],
+      "viewProviders": [],
+      "queries": [],
+      "viewQueries": []
+    }
+  },
+  "alias": {}
+}

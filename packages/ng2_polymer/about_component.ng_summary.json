@@ -1,0 +1,54 @@
+{
+  "ngDeps": {
+    "1": "",
+    "3": [
+      {
+        "1": "package:angular2/core.dart",
+        "5": false
+      }
+    ],
+    "5": [
+      {
+        "1": "AboutComponent"
+      }
+    ],
+    "6": "about_component.dart"
+  },
+  "type": {
+    "AboutComponent": {
+      "class": "Directive",
+      "isComponent": true,
+      "selector": "about",
+      "exportAs": null,
+      "type": {
+        "class": "Type",
+        "name": "AboutComponent",
+        "moduleUrl": "asset:ng2_polymer/lib/about_component.dart",
+        "prefix": null,
+        "isHost": false,
+        "value": null,
+        "diDeps": []
+      },
+      "changeDetection": 5,
+      "inputs": {},
+      "outputs": {},
+      "hostListeners": {},
+      "hostProperties": {},
+      "hostAttributes": {},
+      "lifecycleHooks": [],
+      "template": {
+        "encapsulation": 2,
+        "template": "<h2>About</h2>",
+        "templateUrl": "asset:ng2_polymer/lib/about_component.html",
+        "styles": [],
+        "styleUrls": [],
+        "ngContentSelectors": []
+      },
+      "providers": [],
+      "viewProviders": [],
+      "queries": [],
+      "viewQueries": []
+    }
+  },
+  "alias": {}
+}

@@ -1,0 +1,72 @@
+{
+  "ngDeps": {
+    "1": "",
+    "3": [
+      {
+        "1": "package:angular2/core.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/iron_flex_layout.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/iron_flex_layout/classes/iron_flex_layout.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/paper_material.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/paper_header_panel.dart",
+        "5": false
+      }
+    ],
+    "5": [
+      {
+        "1": "HomeComponent"
+      }
+    ],
+    "6": "home_component.dart"
+  },
+  "type": {
+    "HomeComponent": {
+      "class": "Directive",
+      "isComponent": true,
+      "selector": "home",
+      "exportAs": null,
+      "type": {
+        "class": "Type",
+        "name": "HomeComponent",
+        "moduleUrl": "asset:ng2_polymer/lib/home_component.dart",
+        "prefix": null,
+        "isHost": false,
+        "value": null,
+        "diDeps": []
+      },
+      "changeDetection": 5,
+      "inputs": {},
+      "outputs": {},
+      "hostListeners": {},
+      "hostProperties": {},
+      "hostAttributes": {},
+      "lifecycleHooks": [],
+      "template": {
+        "encapsulation": 0,
+        "template": "<dom-module id=\"home_component\">\n\t<style is=\"custom-style\">\n\t  .flex {\n\t    @apply(--layout-horizontal);\n\t    -webkit-flex: 1 1 auto;\n\t  }\n    :host {\n      display: block;\n      padding: 24px;\n      font-family: 'Roboto', 'Noto', sans-serif;\n      font-size: 14px;\n    }\n    .form-title {\n      margin-bottom: 20px;\n    }\n    .card {\n      background: white;\n      max-width: 400px;\n      min-width: 300px;\n      min-height: 300px;\n      padding: 0;\n      margin: 20px 20px auto 10px;\n    }\n    .card paper-header-panel {\n    \tmargin: 0;\n      min-height: 300px;\n      max-height: 300px\n    }\n    .card-content {\n    \tpadding: 16px;\n    }\n    .info {\n    \tbackground-color: #0000ff;\n    }\n    .ok {\n    \tbackground-color: #009900;\n    }\n    .warning {\n    \tbackground-color: #ff9900;\n    }\n    .critical {\n    \tbackground-color: #cc0000;\n    }\n\t</style>\n\n\t<h2>Home</h2>\n\n  <div class=\"layout horizontal around-justified wrap\">\n\t  <paper-material class=\"card flex\">\n\t\t  <paper-header-panel mode=\"standard\">\n\t\t  \t<paper-toolbar class=\"info\"><div>Info grow</div></paper-toolbar>\n\t\t\t  <div class=\"card-content fit\">\n\t\t\t  \tLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n\t\t\t  </div>\n\t\t  </paper-header-panel>\n\t\t</paper-material>\n\t  <paper-material class=\"card\">\n\t\t  <paper-header-panel mode=\"standard\">\n\t\t  \t<paper-toolbar class=\"ok\"><div>Ok static</div></paper-toolbar>\n\t\t\t  <div class=\"card-content fit\">\n\t\t\t  \tLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n\t\t\t  </div>\n\t\t  </paper-header-panel>\n\t\t</paper-material>\n\t  <paper-material class=\"card flex\">\n\t\t  <paper-header-panel mode=\"standard\">\n\t\t  \t<paper-toolbar class=\"warning\"><div>Warning grow</div></paper-toolbar>\n\t\t\t  <div class=\"card-content fit\">\n\t\t\t  \tLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n\t\t\t  </div>\n\t\t  </paper-header-panel>\n\t\t</paper-material>\n\t  <paper-material class=\"card flex\">\n\t\t  <paper-header-panel mode=\"standard\">\n\t\t  \t<paper-toolbar class=\"critical\"><div>Critical grow</div></paper-toolbar>\n\t\t\t  <div class=\"card-content fit\">\n\t\t\t  \tLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.<br/><br/>\n\n\t\t\t  \tDuis mattis, sapien ut cursus suscipit, lorem ligula tincidunt lectus, in bibendum orci nibh eu augue. Etiam at rutrum libero. Integer id nisi mi. Praesent dignissim libero sit amet arcu tincidunt mollis. Donec vitae semper ante, sed semper est. Maecenas bibendum egestas sapien. Quisque fringilla diam ac accumsan consectetur. Phasellus gravida mattis placerat. Ut lobortis, odio vitae euismod gravida, odio risus feugiat nunc, ut rutrum neque sapien sed arcu. Mauris pellentesque arcu quis massa auctor accumsan et vel odio. Suspendisse vitae ante varius, faucibus urna tempus, fermentum nulla. Mauris tristique id lectus et maximus. In hac habitasse platea dictumst. Etiam in tincidunt metus. Nullam quis scelerisque quam. Morbi pharetra tortor imperdiet eros volutpat vestibulum.\n\t\t\t  </div>\n\t\t  </paper-header-panel>\n\t\t</paper-material>\n  </div>\n\n</dom-module>",
+        "templateUrl": "asset:ng2_polymer/lib/home_component.html",
+        "styles": [
+          "\n\t  .flex {\n\t    @apply(--layout-horizontal);\n\t    -webkit-flex: 1 1 auto;\n\t  }\n    :host {\n      display: block;\n      padding: 24px;\n      font-family: 'Roboto', 'Noto', sans-serif;\n      font-size: 14px;\n    }\n    .form-title {\n      margin-bottom: 20px;\n    }\n    .card {\n      background: white;\n      max-width: 400px;\n      min-width: 300px;\n      min-height: 300px;\n      padding: 0;\n      margin: 20px 20px auto 10px;\n    }\n    .card paper-header-panel {\n    \tmargin: 0;\n      min-height: 300px;\n      max-height: 300px\n    }\n    .card-content {\n    \tpadding: 16px;\n    }\n    .info {\n    \tbackground-color: #0000ff;\n    }\n    .ok {\n    \tbackground-color: #009900;\n    }\n    .warning {\n    \tbackground-color: #ff9900;\n    }\n    .critical {\n    \tbackground-color: #cc0000;\n    }\n\t"
+        ],
+        "styleUrls": [],
+        "ngContentSelectors": []
+      },
+      "providers": [],
+      "viewProviders": [],
+      "queries": [],
+      "viewQueries": []
+    }
+  },
+  "alias": {}
+}

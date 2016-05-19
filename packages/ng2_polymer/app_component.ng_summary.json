@@ -1,0 +1,121 @@
+{
+  "ngDeps": {
+    "1": "",
+    "3": [
+      {
+        "1": "package:angular2/core.dart",
+        "5": false
+      },
+      {
+        "1": "package:angular2/router.dart",
+        "5": false
+      },
+      {
+        "1": "home_component.dart",
+        "5": false
+      },
+      {
+        "1": "page1_component.dart",
+        "5": false
+      },
+      {
+        "1": "page2_component.dart",
+        "5": false
+      },
+      {
+        "1": "page3_component.dart",
+        "5": false
+      },
+      {
+        "1": "help_component.dart",
+        "5": false
+      },
+      {
+        "1": "about_component.dart",
+        "5": false
+      },
+      {
+        "1": "side_nav.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/paper_drawer_panel.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/paper_header_panel.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/paper_toolbar.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/paper_icon_button.dart",
+        "5": false
+      }
+    ],
+    "5": [
+      {
+        "1": "AppComponent",
+        "4": [
+          {
+            "1": "RouteConfig",
+            "2": [
+              "const [const Route(path: '/', name: 'Home', component: HomeComponent), const Route(path: '/page1', name: 'Page1', component: Page1Component), const Route(path: '/page2', name: 'Page2', component: Page2Component), const Route(path: '/page3', name: 'Page3', component: Page3Component), const Route(path: '/help', name: 'Help', component: HelpComponent), const Route(path: '/about', name: 'About', component: AboutComponent)]"
+            ],
+            "4": false
+          }
+        ],
+        "7": [
+          {
+            "2": "ROUTER_DIRECTIVES"
+          },
+          {
+            "2": "SideNavComponent"
+          }
+        ]
+      }
+    ],
+    "6": "app_component.dart"
+  },
+  "type": {
+    "AppComponent": {
+      "class": "Directive",
+      "isComponent": true,
+      "selector": "my-app",
+      "exportAs": null,
+      "type": {
+        "class": "Type",
+        "name": "AppComponent",
+        "moduleUrl": "asset:ng2_polymer/lib/app_component.dart",
+        "prefix": null,
+        "isHost": false,
+        "value": null,
+        "diDeps": []
+      },
+      "changeDetection": 5,
+      "inputs": {},
+      "outputs": {},
+      "hostListeners": {},
+      "hostProperties": {},
+      "hostAttributes": {},
+      "lifecycleHooks": [],
+      "template": {
+        "encapsulation": 0,
+        "template": "<dom-module id=\"my-app\">\n<style>\n  .content {\n    padding: 15px;\n  }\n\n  .app-title {\n    text-align: center;\n  }\n  paper-toolbar {\n  \tbackground: #6CA6CD;\n  }\n</style>\n\n<paper-drawer-panel>\n  <paper-header-panel drawer>\n    <paper-toolbar>\n      <h2 class=\"app-title\">My App</h2>\n    </paper-toolbar>\n    <div>\n    \t<side-nav></side-nav>\n    </div>\n  </paper-header-panel>\n\n  <paper-header-panel class=\"flex\" main>\n    <paper-toolbar>\n      <paper-icon-button icon=\"menu\" paper-drawer-toggle></paper-icon-button>\n      <div class=\"app-title\"></div>\n      <div class=\"flex-auto\" style=\"text-align: right;\">\n        <paper-icon-button icon=\"alarm-on\" (click)=\"test()\"></paper-icon-button>\n        <paper-icon-button icon=\"help\" (click)=\"test()\"></paper-icon-button>\n        <paper-icon-button icon=\"settings\" (click)=\"test()\"></paper-icon-button>\n        <paper-icon-button icon=\"search\" (click)=\"test()\"></paper-icon-button>\n      </div>\n    </paper-toolbar>\n\n    <div class=\"content\">\n      <router-outlet></router-outlet>\n    </div>\n  </paper-header-panel>\n\n</paper-drawer-panel>\n</dom-module>\n",
+        "templateUrl": "asset:ng2_polymer/lib/app_component.html",
+        "styles": [
+          "\n  .content {\n    padding: 15px;\n  }\n\n  .app-title {\n    text-align: center;\n  }\n  paper-toolbar {\n  \tbackground: #6CA6CD;\n  }\n"
+        ],
+        "styleUrls": [],
+        "ngContentSelectors": []
+      },
+      "providers": [],
+      "viewProviders": [],
+      "queries": [],
+      "viewQueries": []
+    }
+  },
+  "alias": {}
+}

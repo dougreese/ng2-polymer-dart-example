@@ -1,0 +1,71 @@
+{
+  "ngDeps": {
+    "1": "",
+    "3": [
+      {
+        "1": "package:angular2/core.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/iron_flex_layout.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/paper_material.dart",
+        "5": false
+      }
+    ],
+    "5": [
+      {
+        "1": "Page1Component"
+      }
+    ],
+    "6": "page1_component.dart"
+  },
+  "type": {
+    "GroupUsers": {
+      "class": "Identifier",
+      "name": "GroupUsers",
+      "moduleUrl": "asset:ng2_polymer/lib/page1_component.dart",
+      "prefix": null,
+      "value": null
+    },
+    "Page1Component": {
+      "class": "Directive",
+      "isComponent": true,
+      "selector": "page1",
+      "exportAs": null,
+      "type": {
+        "class": "Type",
+        "name": "Page1Component",
+        "moduleUrl": "asset:ng2_polymer/lib/page1_component.dart",
+        "prefix": null,
+        "isHost": false,
+        "value": null,
+        "diDeps": []
+      },
+      "changeDetection": 5,
+      "inputs": {},
+      "outputs": {},
+      "hostListeners": {},
+      "hostProperties": {},
+      "hostAttributes": {},
+      "lifecycleHooks": [],
+      "template": {
+        "encapsulation": 0,
+        "template": "<dom-module id=\"page1_component\">\n  <style is=\"custom-style\">\n    .flex {\n      /*@apply(--layout-vertical);*/\n    }\n    :host {\n      display: block;\n      padding: 24px;\n      font-family: 'Roboto', 'Noto', sans-serif;\n      font-size: 14px;\n    }\n    div#table {\n    }\n    .card {\n      /*background: red;*/\n      padding: 0;\n      border-top: 1px solid #ccc;\n      border-left: 1px solid #ccc;\n      border-right: 1px solid #ccc;\n\n      /*max-height: 100px;*/\n      /*margin: 20px 20px auto 10px;*/\n    }\n    .card-content {\n      padding: 16px;\n      @apply(--layout-horizontal);\n    }\n    .name {\n      width: 200px;\n      font-weight: bold;\n    }\n    .moreinfo {\n      width: 200px;\n    }\n    paper-header-panel {\n      margin: 0;\n      /*max-height: 400px;*/\n      margin-bottom: 20px;\n      /*background: green;*/\n    }\n    .info {\n      background-color: #0000ff;\n    }\n    .ok {\n      background-color: #009900;\n    }\n    .warning {\n      background-color: #ff9900;\n    }\n    .critical {\n      background-color: #cc0000;\n    }\n  </style>\n\n  <h2>Page 1</h2>\n\n  <div id=\"table\" >\n      <paper-header-panel *ngFor=\"let group of groups\" mode=\"standard\" [style.height.px]=\"group.groupHeight\">\n        <paper-toolbar class=\"info\"><h3>{{group.name}}</h3></paper-toolbar>\n        <paper-material *ngFor=\"let user of group.users\" class=\"card\" [style.height.px]=\"contentHeight\">\n          <div class=\"card-content layout horizontal wrap\">\n            <div class=\"name\">\n              {{user}} - more info\n            </div>\n            <div class=\"moreinfo\">\n              Even more info\n            </div>\n            <div class=\"moreinfo\">\n              Yet more info\n            </div>\n          </div>\n        </paper-material>\n      </paper-header-panel>\n  </div>\n\n</dom-module>",
+        "templateUrl": "asset:ng2_polymer/lib/page1_component.html",
+        "styles": [
+          "\n    .flex {\n      /*@apply(--layout-vertical);*/\n    }\n    :host {\n      display: block;\n      padding: 24px;\n      font-family: 'Roboto', 'Noto', sans-serif;\n      font-size: 14px;\n    }\n    div#table {\n    }\n    .card {\n      /*background: red;*/\n      padding: 0;\n      border-top: 1px solid #ccc;\n      border-left: 1px solid #ccc;\n      border-right: 1px solid #ccc;\n\n      /*max-height: 100px;*/\n      /*margin: 20px 20px auto 10px;*/\n    }\n    .card-content {\n      padding: 16px;\n      @apply(--layout-horizontal);\n    }\n    .name {\n      width: 200px;\n      font-weight: bold;\n    }\n    .moreinfo {\n      width: 200px;\n    }\n    paper-header-panel {\n      margin: 0;\n      /*max-height: 400px;*/\n      margin-bottom: 20px;\n      /*background: green;*/\n    }\n    .info {\n      background-color: #0000ff;\n    }\n    .ok {\n      background-color: #009900;\n    }\n    .warning {\n      background-color: #ff9900;\n    }\n    .critical {\n      background-color: #cc0000;\n    }\n  "
+        ],
+        "styleUrls": [],
+        "ngContentSelectors": []
+      },
+      "providers": [],
+      "viewProviders": [],
+      "queries": [],
+      "viewQueries": []
+    }
+  },
+  "alias": {}
+}

@@ -1,0 +1,76 @@
+<dom-module id="page1_component">
+  <style is="custom-style">
+    .flex {
+      /*@apply(--layout-vertical);*/
+    }
+    :host {
+      display: block;
+      padding: 24px;
+      font-family: 'Roboto', 'Noto', sans-serif;
+      font-size: 14px;
+    }
+    div#table {
+    }
+    .card {
+      /*background: red;*/
+      padding: 0;
+      border-top: 1px solid #ccc;
+      border-left: 1px solid #ccc;
+      border-right: 1px solid #ccc;
+
+      /*max-height: 100px;*/
+      /*margin: 20px 20px auto 10px;*/
+    }
+    .card-content {
+      padding: 16px;
+      @apply(--layout-horizontal);
+    }
+    .name {
+      width: 200px;
+      font-weight: bold;
+    }
+    .moreinfo {
+      width: 200px;
+    }
+    paper-header-panel {
+      margin: 0;
+      /*max-height: 400px;*/
+      margin-bottom: 20px;
+      /*background: green;*/
+    }
+    .info {
+      background-color: #0000ff;
+    }
+    .ok {
+      background-color: #009900;
+    }
+    .warning {
+      background-color: #ff9900;
+    }
+    .critical {
+      background-color: #cc0000;
+    }
+  </style>
+
+  <h2>Page 1</h2>
+
+  <div id="table" >
+      <paper-header-panel *ngFor="let group of groups" mode="standard" [style.height.px]="group.groupHeight">
+        <paper-toolbar class="info"><h3>{{group.name}}</h3></paper-toolbar>
+        <paper-material *ngFor="let user of group.users" class="card" [style.height.px]="contentHeight">
+          <div class="card-content layout horizontal wrap">
+            <div class="name">
+              {{user}} - more info
+            </div>
+            <div class="moreinfo">
+              Even more info
+            </div>
+            <div class="moreinfo">
+              Yet more info
+            </div>
+          </div>
+        </paper-material>
+      </paper-header-panel>
+  </div>
+
+</dom-module>

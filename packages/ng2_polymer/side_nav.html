@@ -1,0 +1,64 @@
+<dom-module id="side-nav">
+	<style type="text/css">
+		.nav-header {
+			background: #708090;
+			color: #fff;
+			height: 100px;
+			padding: 16px;
+		}
+		.nav-content {
+			background: #999999;
+		}
+		a:-webkit-any-link {
+		    color: inherit;
+		    text-decoration: inherit;
+		    cursor: auto;
+		}
+		iron-icon {
+			margin-right: 16px !important;
+		}
+		.menu-item {
+			font-size: 13px !important;
+
+		}
+	</style>
+
+	<div class="nav-header">
+		Nav Header
+	</div>
+	<div class="nav-content">
+		<paper-menu>
+			<paper-item>
+				<div class="menu-item"><a [routerLink]="['Home']">
+					<iron-icon icon="home"></iron-icon>Home</a></div>
+			</paper-item>
+			<paper-item>
+				<div class="menu-item"><a [routerLink]="['Page1']">
+					<iron-icon icon="subject" class="material-icons"></iron-icon>Page 1</a></div>
+			</paper-item>
+			<paper-item>
+				<div class="menu-item"><a [routerLink]="['Page2']">
+					<iron-icon icon="warning" class="material-icons"></iron-icon>Page 2</a></div>
+			</paper-item>
+			<paper-item>
+				<div class="menu-item"><a [routerLink]="['Page3']">
+					<iron-icon icon="book" class="material-icons"></iron-icon>Page 3</a></div>
+			</paper-item>
+			<paper-submenu>
+		    <paper-item class="menu-trigger">
+					<div class="menu-item">
+			    	<iron-icon icon="settings" class="material-icons"></iron-icon>Settings</div>
+		    </paper-item>
+		    <paper-menu class="menu-content">
+		      <paper-item><div class="menu-item">Topic 1</div></paper-item>
+		      <paper-item><div class="menu-item">Topic 2</div></paper-item>
+		      <paper-item><div class="menu-item">Topic 3</div></paper-item>
+		    </paper-menu>
+		  </paper-submenu>
+			<paper-item>
+				<div class="menu-item"><a [routerLink]="['About']">
+					<iron-icon icon="info" class="material-icons"></iron-icon>About</a></div>
+			</paper-item>
+		</paper-menu>
+	</div>
+</dom-module>

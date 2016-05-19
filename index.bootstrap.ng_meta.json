@@ -1,0 +1,29 @@
+{
+  "ngDeps": {
+    "1": "ng2_polymer.web.index_bootstrap_dart",
+    "3": [
+      {
+        "1": "main.dart",
+        "4": "i0",
+        "5": false
+      }
+    ],
+    "6": "index.bootstrap.dart",
+    "7": [
+      {
+        "1": "main.ngfactory.dart",
+        "4": "i0"
+      }
+    ]
+  },
+  "type": {
+    "main": {
+      "class": "Identifier",
+      "name": "main",
+      "moduleUrl": "asset:ng2_polymer/web/index.bootstrap.dart",
+      "prefix": null,
+      "value": null
+    }
+  },
+  "alias": {}
+}
