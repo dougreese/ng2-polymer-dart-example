@@ -10,7 +10,6 @@ dependencies:
   polymer: ^1.0.0-rc.16
   polymer_elements: ^1.0.0-rc.8
   web_components: ^0.12.0
-  reflectable: any
 transformers:
 - polymer:
     entry_points: web/index.html

@@ -3,5 +3,4 @@ body, html {
 }
 
 my-app {
-	@apply(--layout-vertical)
 }
