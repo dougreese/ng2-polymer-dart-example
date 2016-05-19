@@ -2,6 +2,8 @@
 
 Sample app used to work on integrating Polymer.Dart into Angular2 Dart project.  This is not a definitive guide, just experiments.  Correct me where I'm wrong!
 
+View live at: http://ng2-polymer.dougreese.com/
+
 ## Explanations
 
 ### main.dart
