@@ -10,6 +10,7 @@ dependencies:
   polymer: ^1.0.0-rc.16
   polymer_elements: ^1.0.0-rc.8
   web_components: ^0.12.0
+  uuid: any
 transformers:
 - polymer:
     entry_points: web/index.html
@@ -18,6 +19,7 @@ transformers:
     - 'package:angular2/common.dart#COMMON_DIRECTIVES'
     - 'package:angular2/router.dart#ROUTER_DIRECTIVES'
     - 'package:angular2/common.dart#CORE_DIRECTIVES'
+    - 'package:angular2/common.dart#FORM_DIRECTIVES'
     platform_pipes:
     - 'package:angular2/common.dart#COMMON_PIPES'
     entry_points: web/main.dart

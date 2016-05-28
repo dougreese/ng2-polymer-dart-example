@@ -20,7 +20,7 @@ import 'package:polymer_elements/paper_icon_button.dart';
 @Component(
 	selector: 'my-app',
 	templateUrl: 'app_component.html',
-    directives: const [ROUTER_DIRECTIVES, SideNavComponent]
+  directives: const [ROUTER_DIRECTIVES, SideNavComponent]
 )
 @RouteConfig(const [
   const Route(path: '/', name: 'Home', component: HomeComponent),

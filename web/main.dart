@@ -4,8 +4,11 @@
 import 'package:angular2/platform/browser.dart';
 import 'package:angular2/router.dart';
 
+import 'package:polymer/polymer.dart';
+
 import 'package:ng2_polymer/app_component.dart';
 
-main() {
+main() async {
+  await initPolymer();
   bootstrap(AppComponent, [ROUTER_PROVIDERS]);
 }
