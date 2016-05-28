@@ -1,0 +1,113 @@
+{
+  "ngDeps": {
+    "1": "",
+    "3": [
+      {
+        "1": "package:angular2/core.dart",
+        "5": false
+      },
+      {
+        "1": "dart:html",
+        "5": false
+      },
+      {
+        "1": "user.dart",
+        "5": false
+      },
+      {
+        "1": "edit_form.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/paper_dialog.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/paper_button.dart",
+        "5": false
+      }
+    ],
+    "5": [
+      {
+        "1": "EditDialog",
+        "7": [
+          {
+            "2": "EditForm"
+          }
+        ]
+      }
+    ],
+    "6": "edit_dialog.dart",
+    "7": [
+      {
+        "1": "package:angular2/core.ngfactory.dart",
+        "4": "i0"
+      },
+      {
+        "1": "user.ngfactory.dart",
+        "4": "i1"
+      },
+      {
+        "1": "edit_form.ngfactory.dart",
+        "4": "i2"
+      }
+    ]
+  },
+  "type": {
+    "EditDialog": {
+      "class": "Directive",
+      "isComponent": true,
+      "selector": "edit-dialog",
+      "exportAs": null,
+      "type": {
+        "class": "Type",
+        "name": "EditDialog",
+        "moduleUrl": "asset:ng2_polymer/lib/edit_dialog.dart",
+        "prefix": null,
+        "isHost": false,
+        "value": null,
+        "diDeps": []
+      },
+      "changeDetection": 5,
+      "inputs": {
+        "user": "user"
+      },
+      "outputs": {
+        "updated": "updated"
+      },
+      "hostListeners": {},
+      "hostProperties": {},
+      "hostAttributes": {},
+      "lifecycleHooks": [],
+      "template": {
+        "encapsulation": 0,
+        "template": "<dom-module id=\"edit_form\">\n  <style is=\"custom-style\">\n    div#content {\n      padding: 20px;\n    }\n\n    paper-button {\n      text-transform: none;\n      cursor: default;\n    }\n  </style>\n\n  <paper-button (click)=\"edit()\" raised>edit</paper-button>\n\n  <paper-dialog id=\"edit-dialog-{{dialogId}}\">\n    <h4>Edit user: {{user.name}}</h4>\n\n    <div id=\"content\">\n      <edit-form #editForm (updated)=\"onUpdated($event)\"></edit-form>\n    </div>\n  </paper-dialog>\n</dom-module>",
+        "templateUrl": "asset:ng2_polymer/lib/edit_dialog.html",
+        "styles": [
+          "\n    div#content {\n      padding: 20px;\n    }\n\n    paper-button {\n      text-transform: none;\n      cursor: default;\n    }\n  "
+        ],
+        "styleUrls": [],
+        "ngContentSelectors": []
+      },
+      "providers": [],
+      "viewProviders": [],
+      "queries": [],
+      "viewQueries": [
+        {
+          "selectors": [
+            {
+              "value": "editForm",
+              "identifier": null,
+              "identifierIsInstance": false
+            }
+          ],
+          "descendants": true,
+          "first": true,
+          "propertyName": "editForm",
+          "read": null
+        }
+      ]
+    }
+  },
+  "alias": {}
+}

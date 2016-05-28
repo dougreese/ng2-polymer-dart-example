@@ -3,7 +3,23 @@
     "1": "",
     "3": [
       {
+        "1": "dart:html",
+        "5": false
+      },
+      {
+        "1": "dart:async",
+        "5": false
+      },
+      {
         "1": "package:angular2/core.dart",
+        "5": false
+      },
+      {
+        "1": "edit_dialog.dart",
+        "5": false
+      },
+      {
+        "1": "user.dart",
         "5": false
       },
       {
@@ -17,7 +33,18 @@
     ],
     "5": [
       {
-        "1": "Page1Component"
+        "1": "Page1Component",
+        "5": [
+          {
+            "1": "NgZone",
+            "4": "_zone"
+          }
+        ],
+        "7": [
+          {
+            "2": "EditDialog"
+          }
+        ]
       }
     ],
     "6": "page1_component.dart"
@@ -42,7 +69,30 @@
         "prefix": null,
         "isHost": false,
         "value": null,
-        "diDeps": []
+        "diDeps": [
+          {
+            "token": {
+              "value": null,
+              "identifier": {
+                "class": "Identifier",
+                "name": "NgZone",
+                "moduleUrl": null,
+                "prefix": null,
+                "value": null
+              },
+              "identifierIsInstance": false
+            },
+            "query": null,
+            "viewQuery": null,
+            "value": null,
+            "isAttribute": false,
+            "isSelf": false,
+            "isHost": false,
+            "isSkipSelf": false,
+            "isOptional": false,
+            "isValue": false
+          }
+        ]
       },
       "changeDetection": 5,
       "inputs": {},
@@ -53,10 +103,10 @@
       "lifecycleHooks": [],
       "template": {
         "encapsulation": 0,
-        "template": "<dom-module id=\"page1_component\">\n  <style is=\"custom-style\">\n    .flex {\n      /*@apply(--layout-vertical);*/\n    }\n    :host {\n      display: block;\n      padding: 24px;\n      font-family: 'Roboto', 'Noto', sans-serif;\n      font-size: 14px;\n    }\n    div#table {\n    }\n    .card {\n      /*background: red;*/\n      padding: 0;\n      border-top: 1px solid #ccc;\n      border-left: 1px solid #ccc;\n      border-right: 1px solid #ccc;\n\n      /*max-height: 100px;*/\n      /*margin: 20px 20px auto 10px;*/\n    }\n    .card-content {\n      padding: 16px;\n      @apply(--layout-horizontal);\n    }\n    .name {\n      width: 200px;\n      font-weight: bold;\n    }\n    .moreinfo {\n      width: 200px;\n    }\n    paper-header-panel {\n      margin: 0;\n      /*max-height: 400px;*/\n      margin-bottom: 20px;\n      /*background: green;*/\n    }\n    .info {\n      background-color: #0000ff;\n    }\n    .ok {\n      background-color: #009900;\n    }\n    .warning {\n      background-color: #ff9900;\n    }\n    .critical {\n      background-color: #cc0000;\n    }\n  </style>\n\n  <h2>Page 1</h2>\n\n  <div id=\"table\" >\n      <paper-header-panel *ngFor=\"let group of groups\" mode=\"standard\" [style.height.px]=\"group.groupHeight\">\n        <paper-toolbar class=\"info\"><h3>{{group.name}}</h3></paper-toolbar>\n        <paper-material *ngFor=\"let user of group.users\" class=\"card\" [style.height.px]=\"contentHeight\">\n          <div class=\"card-content layout horizontal wrap\">\n            <div class=\"name\">\n              {{user}} - more info\n            </div>\n            <div class=\"moreinfo\">\n              Even more info\n            </div>\n            <div class=\"moreinfo\">\n              Yet more info\n            </div>\n          </div>\n        </paper-material>\n      </paper-header-panel>\n  </div>\n\n</dom-module>",
+        "template": "<dom-module id=\"page1_component\">\n  <style is=\"custom-style\">\n    .flex {\n      /*@apply(--layout-vertical);*/\n    }\n    :host {\n      display: block;\n      padding: 24px;\n      font-family: 'Roboto', 'Noto', sans-serif;\n      font-size: 14px;\n    }\n    div#table {\n    }\n    .card {\n      /*background: red;*/\n      padding: 0;\n      border-top: 1px solid #ccc;\n      border-left: 1px solid #ccc;\n      border-right: 1px solid #ccc;\n\n      /*max-height: 100px;*/\n      /*margin: 20px 20px auto 10px;*/\n    }\n    .card-content {\n      padding: 16px;\n      @apply(--layout-horizontal);\n    }\n    .name {\n      width: 200px;\n      font-weight: bold;\n    }\n    .moreinfo {\n      width: 200px;\n    }\n    .userid {\n      width: 300;\n    }\n    .edituser\n    {\n      width: 75px;\n    }\n    paper-header-panel {\n      margin: 0;\n      margin-bottom: 20px;\n    }\n    .info {\n      background-color: #0000ff;\n    }\n    .ok {\n      background-color: #009900;\n    }\n    .warning {\n      background-color: #ff9900;\n    }\n    .critical {\n      background-color: #cc0000;\n    }\n  </style>\n\n  <h2>Page 1</h2>\n\n  <div id=\"maintable\">\n    <paper-header-panel *ngFor=\"let group of groups\" mode=\"standard\" [style.height.px]=\"group.groupHeight\">\n      <paper-toolbar class=\"info\"><h3>{{group.name}}</h3></paper-toolbar>\n      <paper-material *ngFor=\"let currentUser of group.users\" class=\"card\" [style.height.px]=\"contentHeight\">\n        <div class=\"card-content layout horizontal wrap\">\n          <div class=\"name\">\n            {{currentUser.name}}\n          </div>\n          <div class=\"moreinfo\">\n            {{currentUser.moreInfo}}\n          </div>\n          <!-- hide user Id when width is less than threshold -->\n          <div #userId class=\"userid\" *ngIf=\"mainWidth > 800\">\n            Id: {{currentUser.id}}\n          </div>\n          <div class=\"edituser\">\n            <edit-dialog [user]=\"currentUser\" (updated)=\"onUpdated($event)\"></edit-dialog>\n          </div>\n        </div>\n      </paper-material>\n    </paper-header-panel>\n  </div>\n\n</dom-module>",
         "templateUrl": "asset:ng2_polymer/lib/page1_component.html",
         "styles": [
-          "\n    .flex {\n      /*@apply(--layout-vertical);*/\n    }\n    :host {\n      display: block;\n      padding: 24px;\n      font-family: 'Roboto', 'Noto', sans-serif;\n      font-size: 14px;\n    }\n    div#table {\n    }\n    .card {\n      /*background: red;*/\n      padding: 0;\n      border-top: 1px solid #ccc;\n      border-left: 1px solid #ccc;\n      border-right: 1px solid #ccc;\n\n      /*max-height: 100px;*/\n      /*margin: 20px 20px auto 10px;*/\n    }\n    .card-content {\n      padding: 16px;\n      @apply(--layout-horizontal);\n    }\n    .name {\n      width: 200px;\n      font-weight: bold;\n    }\n    .moreinfo {\n      width: 200px;\n    }\n    paper-header-panel {\n      margin: 0;\n      /*max-height: 400px;*/\n      margin-bottom: 20px;\n      /*background: green;*/\n    }\n    .info {\n      background-color: #0000ff;\n    }\n    .ok {\n      background-color: #009900;\n    }\n    .warning {\n      background-color: #ff9900;\n    }\n    .critical {\n      background-color: #cc0000;\n    }\n  "
+          "\n    .flex {\n      /*@apply(--layout-vertical);*/\n    }\n    :host {\n      display: block;\n      padding: 24px;\n      font-family: 'Roboto', 'Noto', sans-serif;\n      font-size: 14px;\n    }\n    div#table {\n    }\n    .card {\n      /*background: red;*/\n      padding: 0;\n      border-top: 1px solid #ccc;\n      border-left: 1px solid #ccc;\n      border-right: 1px solid #ccc;\n\n      /*max-height: 100px;*/\n      /*margin: 20px 20px auto 10px;*/\n    }\n    .card-content {\n      padding: 16px;\n      @apply(--layout-horizontal);\n    }\n    .name {\n      width: 200px;\n      font-weight: bold;\n    }\n    .moreinfo {\n      width: 200px;\n    }\n    .userid {\n      width: 300;\n    }\n    .edituser\n    {\n      width: 75px;\n    }\n    paper-header-panel {\n      margin: 0;\n      margin-bottom: 20px;\n    }\n    .info {\n      background-color: #0000ff;\n    }\n    .ok {\n      background-color: #009900;\n    }\n    .warning {\n      background-color: #ff9900;\n    }\n    .critical {\n      background-color: #cc0000;\n    }\n  "
         ],
         "styleUrls": [],
         "ngContentSelectors": []
@@ -64,7 +114,21 @@
       "providers": [],
       "viewProviders": [],
       "queries": [],
-      "viewQueries": []
+      "viewQueries": [
+        {
+          "selectors": [
+            {
+              "value": "userId",
+              "identifier": null,
+              "identifierIsInstance": false
+            }
+          ],
+          "descendants": true,
+          "first": true,
+          "propertyName": "userIdDisplay",
+          "read": null
+        }
+      ]
     }
   },
   "alias": {}

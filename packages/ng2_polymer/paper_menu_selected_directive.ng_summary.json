@@ -1,0 +1,55 @@
+{
+  "ngDeps": {
+    "1": "",
+    "3": [
+      {
+        "1": "package:angular2/core.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer/polymer.dart",
+        "5": false
+      }
+    ],
+    "5": [
+      {
+        "1": "PaperMenuSelectedDirective"
+      }
+    ],
+    "6": "paper_menu_selected_directive.dart"
+  },
+  "type": {
+    "PaperMenuSelectedDirective": {
+      "class": "Directive",
+      "isComponent": false,
+      "selector": "paper-menu[selected]",
+      "exportAs": null,
+      "type": {
+        "class": "Type",
+        "name": "PaperMenuSelectedDirective",
+        "moduleUrl": "asset:ng2_polymer/lib/paper_menu_selected_directive.dart",
+        "prefix": null,
+        "isHost": false,
+        "value": null,
+        "diDeps": []
+      },
+      "changeDetection": 5,
+      "inputs": {},
+      "outputs": {
+        "selectedChange": "selectedChange"
+      },
+      "hostListeners": {
+        "iron-select": "onChange($event)"
+      },
+      "hostProperties": {},
+      "hostAttributes": {},
+      "lifecycleHooks": [],
+      "template": null,
+      "providers": [],
+      "viewProviders": [],
+      "queries": [],
+      "viewQueries": []
+    }
+  },
+  "alias": {}
+}

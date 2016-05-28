@@ -1,0 +1,22 @@
+<dom-module id="edit_form">
+  <style is="custom-style">
+    div#content {
+      padding: 20px;
+    }
+
+    paper-button {
+      text-transform: none;
+      cursor: default;
+    }
+  </style>
+
+  <paper-button (click)="edit()" raised>edit</paper-button>
+
+  <paper-dialog id="edit-dialog-{{dialogId}}">
+    <h4>Edit user: {{user.name}}</h4>
+
+    <div id="content">
+      <edit-form #editForm (updated)="onUpdated($event)"></edit-form>
+    </div>
+  </paper-dialog>
+</dom-module>

@@ -32,11 +32,16 @@
     .moreinfo {
       width: 200px;
     }
+    .userid {
+      width: 300;
+    }
+    .edituser
+    {
+      width: 75px;
+    }
     paper-header-panel {
       margin: 0;
-      /*max-height: 400px;*/
       margin-bottom: 20px;
-      /*background: green;*/
     }
     .info {
       background-color: #0000ff;
@@ -54,23 +59,27 @@
 
   <h2>Page 1</h2>
 
-  <div id="table" >
-      <paper-header-panel *ngFor="let group of groups" mode="standard" [style.height.px]="group.groupHeight">
-        <paper-toolbar class="info"><h3>{{group.name}}</h3></paper-toolbar>
-        <paper-material *ngFor="let user of group.users" class="card" [style.height.px]="contentHeight">
-          <div class="card-content layout horizontal wrap">
-            <div class="name">
-              {{user}} - more info
-            </div>
-            <div class="moreinfo">
-              Even more info
-            </div>
-            <div class="moreinfo">
-              Yet more info
-            </div>
+  <div id="maintable">
+    <paper-header-panel *ngFor="let group of groups" mode="standard" [style.height.px]="group.groupHeight">
+      <paper-toolbar class="info"><h3>{{group.name}}</h3></paper-toolbar>
+      <paper-material *ngFor="let currentUser of group.users" class="card" [style.height.px]="contentHeight">
+        <div class="card-content layout horizontal wrap">
+          <div class="name">
+            {{currentUser.name}}
           </div>
-        </paper-material>
-      </paper-header-panel>
+          <div class="moreinfo">
+            {{currentUser.moreInfo}}
+          </div>
+          <!-- hide user Id when width is less than threshold -->
+          <div #userId class="userid" *ngIf="mainWidth > 800">
+            Id: {{currentUser.id}}
+          </div>
+          <div class="edituser">
+            <edit-dialog [user]="currentUser" (updated)="onUpdated($event)"></edit-dialog>
+          </div>
+        </div>
+      </paper-material>
+    </paper-header-panel>
   </div>
 
 </dom-module>

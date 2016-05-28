@@ -11,6 +11,10 @@
         "5": false
       },
       {
+        "1": "package:polymer/polymer.dart",
+        "5": false
+      },
+      {
         "1": "package:ng2_polymer/app_component.dart",
         "5": false
       }

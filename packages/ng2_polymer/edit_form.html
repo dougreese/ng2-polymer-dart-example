@@ -1,0 +1,26 @@
+<dom-module id="edit_form">
+  <style is="custom-style">
+    paper-input {
+      width: 200px;
+      text-align: left;
+      margin-right: 5px;
+    }
+
+    paper-button {
+      text-transform: none;
+      cursor: default;
+    }
+  </style>
+
+  <div>Change the name from: {{username}}</div>
+
+  <form #editForm="ngForm" (ngSubmit)="submit()">
+    <paper-input #newUserName label="New Name" type="text" [(ngModel)]="newName" ngControl="newNameCtrl" required ngDefaultControl (keyup.enter)="submit(true)"></paper-input>
+    <paper-dropdown-menu #otherValue label="More Info" [ngModel]="selectedValue" ngControl="valueCtrl" required ngDefaultControl>
+      <paper-menu id="itemval" class="dropdown-content" [(selected)]="selected">
+        <paper-item *ngFor="let opt of options">{{opt}}</paper-item>
+      </paper-menu>
+    </paper-dropdown-menu>
+    <paper-button raised [disabled]="!editForm.form.valid" (click)="submit()">Change name</paper-button>
+  </form>
+</dom-module>

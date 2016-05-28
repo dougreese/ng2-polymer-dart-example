@@ -1,0 +1,172 @@
+{
+  "ngDeps": {
+    "1": "",
+    "3": [
+      {
+        "1": "package:angular2/core.dart",
+        "5": false
+      },
+      {
+        "1": "package:angular2/angular2.dart",
+        "5": false
+      },
+      {
+        "1": "dart:html",
+        "4": "dom",
+        "5": false
+      },
+      {
+        "1": "dart:async",
+        "5": false
+      },
+      {
+        "1": "user.dart",
+        "5": false
+      },
+      {
+        "1": "paper_menu_selected_directive.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/paper_material.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/paper_dialog.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/paper_dropdown_menu.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/paper_menu.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/paper_item.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/paper_input.dart",
+        "5": false
+      },
+      {
+        "1": "package:polymer_elements/paper_button.dart",
+        "5": false
+      }
+    ],
+    "5": [
+      {
+        "1": "EditForm",
+        "7": [
+          {
+            "2": "PaperMenuSelectedDirective"
+          }
+        ]
+      }
+    ],
+    "6": "edit_form.dart",
+    "7": [
+      {
+        "1": "package:angular2/core.ngfactory.dart",
+        "4": "i0"
+      },
+      {
+        "1": "package:angular2/angular2.ngfactory.dart",
+        "4": "i1"
+      },
+      {
+        "1": "user.ngfactory.dart",
+        "4": "i2"
+      },
+      {
+        "1": "paper_menu_selected_directive.ngfactory.dart",
+        "4": "i3"
+      }
+    ]
+  },
+  "type": {
+    "EditForm": {
+      "class": "Directive",
+      "isComponent": true,
+      "selector": "edit-form",
+      "exportAs": null,
+      "type": {
+        "class": "Type",
+        "name": "EditForm",
+        "moduleUrl": "asset:ng2_polymer/lib/edit_form.dart",
+        "prefix": null,
+        "isHost": false,
+        "value": null,
+        "diDeps": []
+      },
+      "changeDetection": 5,
+      "inputs": {
+        "user": "user"
+      },
+      "outputs": {
+        "updated": "updated"
+      },
+      "hostListeners": {},
+      "hostProperties": {},
+      "hostAttributes": {},
+      "lifecycleHooks": [],
+      "template": {
+        "encapsulation": 1,
+        "template": "<dom-module id=\"edit_form\">\n  <style is=\"custom-style\">\n    paper-input {\n      width: 200px;\n      text-align: left;\n      margin-right: 5px;\n    }\n\n    paper-button {\n      text-transform: none;\n      cursor: default;\n    }\n  </style>\n\n  <div>Change the name from: {{username}}</div>\n\n  <form #editForm=\"ngForm\" (ngSubmit)=\"submit()\">\n    <paper-input #newUserName label=\"New Name\" type=\"text\" [(ngModel)]=\"newName\" ngControl=\"newNameCtrl\" required ngDefaultControl (keyup.enter)=\"submit(true)\"></paper-input>\n    <paper-dropdown-menu #otherValue label=\"More Info\" [ngModel]=\"selectedValue\" ngControl=\"valueCtrl\" required ngDefaultControl>\n      <paper-menu id=\"itemval\" class=\"dropdown-content\" [(selected)]=\"selected\">\n        <paper-item *ngFor=\"let opt of options\">{{opt}}</paper-item>\n      </paper-menu>\n    </paper-dropdown-menu>\n    <paper-button raised [disabled]=\"!editForm.form.valid\" (click)=\"submit()\">Change name</paper-button>\n  </form>\n</dom-module>",
+        "templateUrl": "asset:ng2_polymer/lib/edit_form.html",
+        "styles": [
+          "\n    paper-input {\n      width: 200px;\n      text-align: left;\n      margin-right: 5px;\n    }\n\n    paper-button {\n      text-transform: none;\n      cursor: default;\n    }\n  "
+        ],
+        "styleUrls": [],
+        "ngContentSelectors": []
+      },
+      "providers": [],
+      "viewProviders": [],
+      "queries": [],
+      "viewQueries": [
+        {
+          "selectors": [
+            {
+              "value": "editForm",
+              "identifier": null,
+              "identifierIsInstance": false
+            }
+          ],
+          "descendants": true,
+          "first": true,
+          "propertyName": "editForm",
+          "read": null
+        },
+        {
+          "selectors": [
+            {
+              "value": "newUserName",
+              "identifier": null,
+              "identifierIsInstance": false
+            }
+          ],
+          "descendants": true,
+          "first": true,
+          "propertyName": "newNameInput",
+          "read": null
+        },
+        {
+          "selectors": [
+            {
+              "value": "otherValue",
+              "identifier": null,
+              "identifierIsInstance": false
+            }
+          ],
+          "descendants": true,
+          "first": true,
+          "propertyName": "valueDropdown",
+          "read": null
+        }
+      ]
+    }
+  },
+  "alias": {}
+}
