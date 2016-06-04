@@ -4,6 +4,8 @@
 import 'package:angular2/core.dart';
 import 'package:angular2/router.dart';
 
+import 'package:logging/logging.dart';
+
 import 'home_component.dart';
 import 'page1_component.dart';
 import 'page2_component.dart';
@@ -31,9 +33,13 @@ import 'package:polymer_elements/paper_icon_button.dart';
   const Route(path: '/about', name: 'About', component: AboutComponent),
 ])
 class AppComponent {
+  AppComponent() {
+    Logger.root.level = Level.ALL;
+    Logger.root.onRecord.listen((LogRecord rec) {
+      print('${rec.time} ${rec.loggerName}: ${rec.message} (${rec.level.name})');
+    });
 
-
-	void test() {
-		print("Click test");
-	}
+    final Logger log = new Logger("AppComponent");
+    log.finest("Loading ng2-polymer app");
+  }
 }

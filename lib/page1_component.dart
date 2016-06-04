@@ -4,6 +4,8 @@ import 'dart:async';
 import 'package:angular2/core.dart';
 import 'package:angular2/router.dart';
 
+import 'package:logging/logging.dart' show Logger;
+
 import 'edit_dialog.dart';
 import 'user.dart';
 
@@ -51,6 +53,7 @@ class GroupUsers {
 )
 class Page1Component implements OnInit, OnActivate, OnDeactivate, OnReuse, CanDeactivate, CanReuse {
 
+  Logger _logger = new Logger('Page1Component');
 	List<GroupUsers> groups;
   int contentHeight = 100;
   Element mainTable;
@@ -64,7 +67,7 @@ class Page1Component implements OnInit, OnActivate, OnDeactivate, OnReuse, CanDe
 	}
 
 	void ngOnInit() {
-		print("Page1 ngOnInit");
+		_logger.fine("Page1 ngOnInit");
     // simple demo data
 		groups.add(new GroupUsers("Group 1", [
       new User("Tim"),
@@ -82,21 +85,21 @@ class Page1Component implements OnInit, OnActivate, OnDeactivate, OnReuse, CanDe
       new User("Martha")
     ]));
 
-		print("Data items: ${groups}");
+		_logger.fine("Data items: ${groups}");
     initResizeListener();
 	}
 
   void onResize(e) {
     // set the main width and update view
     mainWidth = mainTable.clientWidth;
-//    print("mainWidth is now $mainWidth");
+//    _logger.fine("mainWidth is now $mainWidth");
     _zone.run(() {
-//      print("refreshing");
+//      _logger.fine("refreshing");
     });
   }
 
   void onUpdated(User u) {
-    print("User updated: $u");
+    _logger.fine("User updated: $u");
     updateUser(u);
   }
 
@@ -118,27 +121,27 @@ class Page1Component implements OnInit, OnActivate, OnDeactivate, OnReuse, CanDe
   }
 
   dynamic routerOnActivate(ComponentInstruction next, ComponentInstruction prev) {
-    print("Page1 routerOnActivate - prev: ${prev.routeName}, next: ${next.routeName}");
+    _logger.fine("Page1 routerOnActivate - prev: ${prev.routeName}, next: ${next.routeName}");
     return true;
   }
 
   dynamic routerOnDeactivate(ComponentInstruction next, ComponentInstruction prev) {
-    print("Page1 routerOnDeactivate - prev: ${prev.routeName}, next: ${next.routeName}");
+    _logger.fine("Page1 routerOnDeactivate - prev: ${prev.routeName}, next: ${next.routeName}");
     return true;
   }
 
   dynamic routerOnReuse(ComponentInstruction next, ComponentInstruction prev) {
-    print("Page1 routerOnReuse - prev: ${prev.routeName}, next: ${next.routeName}");
+    _logger.fine("Page1 routerOnReuse - prev: ${prev.routeName}, next: ${next.routeName}");
     return true;
   }
 
   dynamic routerCanReuse(ComponentInstruction next, ComponentInstruction prev) {
-    print("Page1 routerCanReuse - prev: ${prev.routeName}, next: ${next.routeName}");
+    _logger.fine("Page1 routerCanReuse - prev: ${prev.routeName}, next: ${next.routeName}");
     return true;
   }
 
   dynamic routerCanDeactivate(ComponentInstruction next, ComponentInstruction prev) {
-    print("Page1 routerCanDeactivate - prev: ${prev.routeName}, next: ${next.routeName}");
+    _logger.fine("Page1 routerCanDeactivate - prev: ${prev.routeName}, next: ${next.routeName}");
     return true;
   }
 }
