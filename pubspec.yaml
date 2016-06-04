@@ -1,0 +1,31 @@
+name: ng2_polymer
+description: A Dart app that uses Angular 2
+version: 0.0.1
+environment:
+  sdk: '>=1.13.0 <2.0.0'
+dependencies:
+  angular2: 2.0.0-beta.17
+  browser: ^0.10.0
+  dart_to_js_script_rewriter: ^1.0.1
+  polymer: ^1.0.0-rc.16
+  polymer_elements: ^1.0.0-rc.8
+  web_components: ^0.12.0
+  uuid: any
+transformers:
+- polymer:
+    entry_points: web/index.html
+- angular2:
+    platform_directives:
+    - 'package:angular2/common.dart#COMMON_DIRECTIVES'
+    - 'package:angular2/router.dart#ROUTER_DIRECTIVES'
+    - 'package:angular2/common.dart#CORE_DIRECTIVES'
+    - 'package:angular2/common.dart#FORM_DIRECTIVES'
+    platform_pipes:
+    - 'package:angular2/common.dart#COMMON_PIPES'
+    entry_points: web/main.dart
+- dart_to_js_script_rewriter
+- $dart2js:
+    minify: true
+    commandLineOptions:
+    - --trust-type-annotations
+    - --trust-primitives
