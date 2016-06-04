@@ -7,7 +7,18 @@
         "5": false
       },
       {
+        "1": "package:angular2/router.dart",
+        "5": false
+      },
+      {
         "1": "dart:html",
+        "5": false
+      },
+      {
+        "1": "package:logging/logging.dart",
+        "2": [
+          "Logger"
+        ],
         "5": false
       },
       {
@@ -30,6 +41,14 @@
     "5": [
       {
         "1": "EditDialog",
+        "6": [
+          "OnInit",
+          "OnActivate",
+          "OnDeactivate",
+          "OnReuse",
+          "CanDeactivate",
+          "CanReuse"
+        ],
         "7": [
           {
             "2": "EditForm"
@@ -44,12 +63,16 @@
         "4": "i0"
       },
       {
-        "1": "user.ngfactory.dart",
+        "1": "package:angular2/router.ngfactory.dart",
         "4": "i1"
       },
       {
-        "1": "edit_form.ngfactory.dart",
+        "1": "user.ngfactory.dart",
         "4": "i2"
+      },
+      {
+        "1": "edit_form.ngfactory.dart",
+        "4": "i3"
       }
     ]
   },
@@ -78,7 +101,9 @@
       "hostListeners": {},
       "hostProperties": {},
       "hostAttributes": {},
-      "lifecycleHooks": [],
+      "lifecycleHooks": [
+        0
+      ],
       "template": {
         "encapsulation": 0,
         "template": "<dom-module id=\"edit_form\">\n  <style is=\"custom-style\">\n    div#content {\n      padding: 20px;\n    }\n\n    paper-button {\n      text-transform: none;\n      cursor: default;\n    }\n  </style>\n\n  <paper-button (click)=\"edit()\" raised>edit</paper-button>\n\n  <paper-dialog id=\"edit-dialog-{{dialogId}}\">\n    <h4>Edit user: {{user.name}}</h4>\n\n    <div id=\"content\">\n      <edit-form #editForm (updated)=\"onUpdated($event)\"></edit-form>\n    </div>\n  </paper-dialog>\n</dom-module>",

@@ -19,6 +19,13 @@
         "5": false
       },
       {
+        "1": "package:logging/logging.dart",
+        "2": [
+          "Logger"
+        ],
+        "5": false
+      },
+      {
         "1": "edit_dialog.dart",
         "5": false
       },

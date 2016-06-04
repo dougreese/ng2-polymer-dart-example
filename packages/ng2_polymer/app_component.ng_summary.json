@@ -11,6 +11,10 @@
         "5": false
       },
       {
+        "1": "package:logging/logging.dart",
+        "5": false
+      },
+      {
         "1": "home_component.dart",
         "5": false
       },
