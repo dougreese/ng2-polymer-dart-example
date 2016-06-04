@@ -2,6 +2,7 @@ import 'dart:html';
 import 'dart:async';
 
 import 'package:angular2/core.dart';
+import 'package:angular2/router.dart';
 
 import 'edit_dialog.dart';
 import 'user.dart';
@@ -48,7 +49,7 @@ class GroupUsers {
 	templateUrl: 'page1_component.html',
   directives: const [EditDialog]
 )
-class Page1Component {
+class Page1Component implements OnInit, OnActivate, OnDeactivate, OnReuse, CanDeactivate, CanReuse {
 
 	List<GroupUsers> groups;
   int contentHeight = 100;
@@ -60,7 +61,10 @@ class Page1Component {
 
 	Page1Component(this._zone) {
 		groups = new List<GroupUsers>();
+	}
 
+	void ngOnInit() {
+		print("Page1 ngOnInit");
     // simple demo data
 		groups.add(new GroupUsers("Group 1", [
       new User("Tim"),
@@ -111,5 +115,30 @@ class Page1Component {
       mainWidth = mainTable.clientWidth;
       window.addEventListener('resize', onResize);
     });
+  }
+
+  dynamic routerOnActivate(ComponentInstruction next, ComponentInstruction prev) {
+    print("Page1 routerOnActivate - prev: ${prev.routeName}, next: ${next.routeName}");
+    return true;
+  }
+
+  dynamic routerOnDeactivate(ComponentInstruction next, ComponentInstruction prev) {
+    print("Page1 routerOnDeactivate - prev: ${prev.routeName}, next: ${next.routeName}");
+    return true;
+  }
+
+  dynamic routerOnReuse(ComponentInstruction next, ComponentInstruction prev) {
+    print("Page1 routerOnReuse - prev: ${prev.routeName}, next: ${next.routeName}");
+    return true;
+  }
+
+  dynamic routerCanReuse(ComponentInstruction next, ComponentInstruction prev) {
+    print("Page1 routerCanReuse - prev: ${prev.routeName}, next: ${next.routeName}");
+    return true;
+  }
+
+  dynamic routerCanDeactivate(ComponentInstruction next, ComponentInstruction prev) {
+    print("Page1 routerCanDeactivate - prev: ${prev.routeName}, next: ${next.routeName}");
+    return true;
   }
 }
