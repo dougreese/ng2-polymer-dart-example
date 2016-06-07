@@ -9505,2459 +9505,6 @@ Custom property | Description | Default
 
 
 <script>
-
-/**
-Polymer.IronFitBehavior fits an element in another element using `max-height` and `max-width`, and
-optionally centers it in the window or another element.
-
-The element will only be sized and/or positioned if it has not already been sized and/or positioned
-by CSS.
-
-CSS properties               | Action
------------------------------|-------------------------------------------
-`position` set               | Element is not centered horizontally or vertically
-`top` or `bottom` set        | Element is not vertically centered
-`left` or `right` set        | Element is not horizontally centered
-`max-height` or `height` set | Element respects `max-height` or `height`
-`max-width` or `width` set   | Element respects `max-width` or `width`
-
-@demo demo/index.html
-@polymerBehavior
-*/
-
-  Polymer.IronFitBehavior = {
-
-    properties: {
-
-      /**
-       * The element that will receive a `max-height`/`width`. By default it is the same as `this`,
-       * but it can be set to a child element. This is useful, for example, for implementing a
-       * scrolling region inside the element.
-       * @type {!Element}
-       */
-      sizingTarget: {
-        type: Object,
-        value: function() {
-          return this;
-        }
-      },
-
-      /**
-       * The element to fit `this` into.
-       */
-      fitInto: {
-        type: Object,
-        value: window
-      },
-
-      /**
-       * Set to true to auto-fit on attach.
-       */
-      autoFitOnAttach: {
-        type: Boolean,
-        value: false
-      },
-
-      /** @type {?Object} */
-      _fitInfo: {
-        type: Object
-      }
-
-    },
-
-    get _fitWidth() {
-      var fitWidth;
-      if (this.fitInto === window) {
-        fitWidth = this.fitInto.innerWidth;
-      } else {
-        fitWidth = this.fitInto.getBoundingClientRect().width;
-      }
-      return fitWidth;
-    },
-
-    get _fitHeight() {
-      var fitHeight;
-      if (this.fitInto === window) {
-        fitHeight = this.fitInto.innerHeight;
-      } else {
-        fitHeight = this.fitInto.getBoundingClientRect().height;
-      }
-      return fitHeight;
-    },
-
-    get _fitLeft() {
-      var fitLeft;
-      if (this.fitInto === window) {
-        fitLeft = 0;
-      } else {
-        fitLeft = this.fitInto.getBoundingClientRect().left;
-      }
-      return fitLeft;
-    },
-
-    get _fitTop() {
-      var fitTop;
-      if (this.fitInto === window) {
-        fitTop = 0;
-      } else {
-        fitTop = this.fitInto.getBoundingClientRect().top;
-      }
-      return fitTop;
-    },
-
-    attached: function() {
-      if (this.autoFitOnAttach) {
-        if (window.getComputedStyle(this).display === 'none') {
-          setTimeout(function() {
-            this.fit();
-          }.bind(this));
-        } else {
-          this.fit();
-        }
-      }
-    },
-
-    /**
-     * Fits and optionally centers the element into the window, or `fitInfo` if specified.
-     */
-    fit: function() {
-      this._discoverInfo();
-      this.constrain();
-      this.center();
-    },
-
-    /**
-     * Memoize information needed to position and size the target element.
-     */
-    _discoverInfo: function() {
-      if (this._fitInfo) {
-        return;
-      }
-      var target = window.getComputedStyle(this);
-      var sizer = window.getComputedStyle(this.sizingTarget);
-      this._fitInfo = {
-        inlineStyle: {
-          top: this.style.top || '',
-          left: this.style.left || ''
-        },
-        positionedBy: {
-          vertically: target.top !== 'auto' ? 'top' : (target.bottom !== 'auto' ?
-            'bottom' : null),
-          horizontally: target.left !== 'auto' ? 'left' : (target.right !== 'auto' ?
-            'right' : null),
-          css: target.position
-        },
-        sizedBy: {
-          height: sizer.maxHeight !== 'none',
-          width: sizer.maxWidth !== 'none'
-        },
-        margin: {
-          top: parseInt(target.marginTop, 10) || 0,
-          right: parseInt(target.marginRight, 10) || 0,
-          bottom: parseInt(target.marginBottom, 10) || 0,
-          left: parseInt(target.marginLeft, 10) || 0
-        }
-      };
-    },
-
-    /**
-     * Resets the target element's position and size constraints, and clear
-     * the memoized data.
-     */
-    resetFit: function() {
-      if (!this._fitInfo || !this._fitInfo.sizedBy.height) {
-        this.sizingTarget.style.maxHeight = '';
-        this.style.top = this._fitInfo ? this._fitInfo.inlineStyle.top : '';
-      }
-      if (!this._fitInfo || !this._fitInfo.sizedBy.width) {
-        this.sizingTarget.style.maxWidth = '';
-        this.style.left = this._fitInfo ? this._fitInfo.inlineStyle.left : '';
-      }
-      if (this._fitInfo) {
-        this.style.position = this._fitInfo.positionedBy.css;
-      }
-      this._fitInfo = null;
-    },
-
-    /**
-     * Equivalent to calling `resetFit()` and `fit()`. Useful to call this after the element,
-     * the window, or the `fitInfo` element has been resized.
-     */
-    refit: function() {
-      this.resetFit();
-      this.fit();
-    },
-
-    /**
-     * Constrains the size of the element to the window or `fitInfo` by setting `max-height`
-     * and/or `max-width`.
-     */
-    constrain: function() {
-      var info = this._fitInfo;
-      // position at (0px, 0px) if not already positioned, so we can measure the natural size.
-      if (!this._fitInfo.positionedBy.vertically) {
-        this.style.top = '0px';
-      }
-      if (!this._fitInfo.positionedBy.horizontally) {
-        this.style.left = '0px';
-      }
-      if (!this._fitInfo.positionedBy.vertically || !this._fitInfo.positionedBy.horizontally) {
-        // need position:fixed to properly size the element
-        this.style.position = 'fixed';
-      }
-      // need border-box for margin/padding
-      this.sizingTarget.style.boxSizing = 'border-box';
-      // constrain the width and height if not already set
-      var rect = this.getBoundingClientRect();
-      if (!info.sizedBy.height) {
-        this._sizeDimension(rect, info.positionedBy.vertically, 'top', 'bottom', 'Height');
-      }
-      if (!info.sizedBy.width) {
-        this._sizeDimension(rect, info.positionedBy.horizontally, 'left', 'right', 'Width');
-      }
-    },
-
-    _sizeDimension: function(rect, positionedBy, start, end, extent) {
-      var info = this._fitInfo;
-      var max = extent === 'Width' ? this._fitWidth : this._fitHeight;
-      var flip = (positionedBy === end);
-      var offset = flip ? max - rect[end] : rect[start];
-      var margin = info.margin[flip ? start : end];
-      var offsetExtent = 'offset' + extent;
-      var sizingOffset = this[offsetExtent] - this.sizingTarget[offsetExtent];
-      this.sizingTarget.style['max' + extent] = (max - margin - offset - sizingOffset) + 'px';
-    },
-
-    /**
-     * Centers horizontally and vertically if not already positioned. This also sets
-     * `position:fixed`.
-     */
-    center: function() {
-      if (!this._fitInfo.positionedBy.vertically || !this._fitInfo.positionedBy.horizontally) {
-        // need position:fixed to center
-        this.style.position = 'fixed';
-      }
-      if (!this._fitInfo.positionedBy.vertically) {
-        var top = (this._fitHeight - this.offsetHeight) / 2 + this._fitTop;
-        top -= this._fitInfo.margin.top;
-        this.style.top = top + 'px';
-      }
-      if (!this._fitInfo.positionedBy.horizontally) {
-        var left = (this._fitWidth - this.offsetWidth) / 2 + this._fitLeft;
-        left -= this._fitInfo.margin.left;
-        this.style.left = left + 'px';
-      }
-    }
-
-  };
-
-</script>
-
-
-
-
-<script>
-  /**
-   * `IronResizableBehavior` is a behavior that can be used in Polymer elements to
-   * coordinate the flow of resize events between "resizers" (elements that control the
-   * size or hidden state of their children) and "resizables" (elements that need to be
-   * notified when they are resized or un-hidden by their parents in order to take
-   * action on their new measurements).
-   * Elements that perform measurement should add the `IronResizableBehavior` behavior to
-   * their element definition and listen for the `iron-resize` event on themselves.
-   * This event will be fired when they become showing after having been hidden,
-   * when they are resized explicitly by another resizable, or when the window has been
-   * resized.
-   * Note, the `iron-resize` event is non-bubbling.
-   *
-   * @polymerBehavior Polymer.IronResizableBehavior
-   * @demo demo/index.html
-   **/
-  Polymer.IronResizableBehavior = {
-    properties: {
-      /**
-       * The closest ancestor element that implements `IronResizableBehavior`.
-       */
-      _parentResizable: {
-        type: Object,
-        observer: '_parentResizableChanged'
-      },
-
-      /**
-       * True if this element is currently notifying its descedant elements of
-       * resize.
-       */
-      _notifyingDescendant: {
-        type: Boolean,
-        value: false
-      }
-    },
-
-    listeners: {
-      'iron-request-resize-notifications': '_onIronRequestResizeNotifications'
-    },
-
-    created: function() {
-      // We don't really need property effects on these, and also we want them
-      // to be created before the `_parentResizable` observer fires:
-      this._interestedResizables = [];
-      this._boundNotifyResize = this.notifyResize.bind(this);
-    },
-
-    attached: function() {
-      this.fire('iron-request-resize-notifications', null, {
-        node: this,
-        bubbles: true,
-        cancelable: true
-      });
-
-      if (!this._parentResizable) {
-        window.addEventListener('resize', this._boundNotifyResize);
-        this.notifyResize();
-      }
-    },
-
-    detached: function() {
-      if (this._parentResizable) {
-        this._parentResizable.stopResizeNotificationsFor(this);
-      } else {
-        window.removeEventListener('resize', this._boundNotifyResize);
-      }
-
-      this._parentResizable = null;
-    },
-
-    /**
-     * Can be called to manually notify a resizable and its descendant
-     * resizables of a resize change.
-     */
-    notifyResize: function() {
-      if (!this.isAttached) {
-        return;
-      }
-
-      this._interestedResizables.forEach(function(resizable) {
-        if (this.resizerShouldNotify(resizable)) {
-          this._notifyDescendant(resizable);
-        }
-      }, this);
-
-      this._fireResize();
-    },
-
-    /**
-     * Used to assign the closest resizable ancestor to this resizable
-     * if the ancestor detects a request for notifications.
-     */
-    assignParentResizable: function(parentResizable) {
-      this._parentResizable = parentResizable;
-    },
-
-    /**
-     * Used to remove a resizable descendant from the list of descendants
-     * that should be notified of a resize change.
-     */
-    stopResizeNotificationsFor: function(target) {
-      var index = this._interestedResizables.indexOf(target);
-
-      if (index > -1) {
-        this._interestedResizables.splice(index, 1);
-        this.unlisten(target, 'iron-resize', '_onDescendantIronResize');
-      }
-    },
-
-    /**
-     * This method can be overridden to filter nested elements that should or
-     * should not be notified by the current element. Return true if an element
-     * should be notified, or false if it should not be notified.
-     *
-     * @param {HTMLElement} element A candidate descendant element that
-     * implements `IronResizableBehavior`.
-     * @return {boolean} True if the `element` should be notified of resize.
-     */
-    resizerShouldNotify: function(element) { return true; },
-
-    _onDescendantIronResize: function(event) {
-      if (this._notifyingDescendant) {
-        event.stopPropagation();
-        return;
-      }
-
-      // NOTE(cdata): In ShadowDOM, event retargetting makes echoing of the
-      // otherwise non-bubbling event "just work." We do it manually here for
-      // the case where Polymer is not using shadow roots for whatever reason:
-      if (!Polymer.Settings.useShadow) {
-        this._fireResize();
-      }
-    },
-
-    _fireResize: function() {
-      this.fire('iron-resize', null, {
-        node: this,
-        bubbles: false
-      });
-    },
-
-    _onIronRequestResizeNotifications: function(event) {
-      var target = event.path ? event.path[0] : event.target;
-
-      if (target === this) {
-        return;
-      }
-
-      if (this._interestedResizables.indexOf(target) === -1) {
-        this._interestedResizables.push(target);
-        this.listen(target, 'iron-resize', '_onDescendantIronResize');
-      }
-
-      target.assignParentResizable(this);
-      this._notifyDescendant(target);
-
-      event.stopPropagation();
-    },
-
-    _parentResizableChanged: function(parentResizable) {
-      if (parentResizable) {
-        window.removeEventListener('resize', this._boundNotifyResize);
-      }
-    },
-
-    _notifyDescendant: function(descendant) {
-      // NOTE(cdata): In IE10, attached is fired on children first, so it's
-      // important not to notify them if the parent is not attached yet (or
-      // else they will get redundantly notified when the parent attaches).
-      if (!this.isAttached) {
-        return;
-      }
-
-      this._notifyingDescendant = true;
-      descendant.notifyResize();
-      this._notifyingDescendant = false;
-    }
-  };
-</script>
-
-
-
-
-
-
-<script>
-
-  Polymer.IronOverlayManager = {
-
-    _overlays: [],
-
-    // iframes have a default z-index of 100, so this default should be at least
-    // that.
-    _minimumZ: 101,
-
-    _backdrops: [],
-
-    _applyOverlayZ: function(overlay, aboveZ) {
-      this._setZ(overlay, aboveZ + 2);
-    },
-
-    _setZ: function(element, z) {
-      element.style.zIndex = z;
-    },
-
-    // track overlays for z-index and focus managemant
-    addOverlay: function(overlay) {
-      var minimumZ = Math.max(this.currentOverlayZ(), this._minimumZ);
-      this._overlays.push(overlay);
-      var newZ = this.currentOverlayZ();
-      if (newZ <= minimumZ) {
-        this._applyOverlayZ(overlay, minimumZ);
-      }
-    },
-
-    removeOverlay: function(overlay) {
-      var i = this._overlays.indexOf(overlay);
-      if (i >= 0) {
-        this._overlays.splice(i, 1);
-        this._setZ(overlay, '');
-      }
-    },
-
-    currentOverlay: function() {
-      var i = this._overlays.length - 1;
-      while (this._overlays[i] && !this._overlays[i].opened) {
-        --i;
-      }
-      return this._overlays[i];
-    },
-
-    currentOverlayZ: function() {
-      var z = this._minimumZ;
-      var current = this.currentOverlay();
-      if (current) {
-        var z1 = window.getComputedStyle(current).zIndex;
-        if (!isNaN(z1)) {
-          z = Number(z1);
-        }
-      }
-      return z;
-    },
-
-    /**
-     * Ensures that the minimum z-index of new overlays is at least `minimumZ`.
-     * This does not effect the z-index of any existing overlays.
-     *
-     * @param {number} minimumZ
-     */
-    ensureMinimumZ: function(minimumZ) {
-      this._minimumZ = Math.max(this._minimumZ, minimumZ);
-    },
-
-    focusOverlay: function() {
-      var current = this.currentOverlay();
-      // We have to be careful to focus the next overlay _after_ any current
-      // transitions are complete (due to the state being toggled prior to the
-      // transition). Otherwise, we risk infinite recursion when a transitioning
-      // (closed) overlay becomes the current overlay.
-      //
-      // NOTE: We make the assumption that any overlay that completes a transition
-      // will call into focusOverlay to kick the process back off. Currently:
-      // transitionend -> _applyFocus -> focusOverlay.
-      if (current && !current.transitioning) {
-        current._applyFocus();
-      }
-    },
-
-    trackBackdrop: function(element) {
-      // backdrops contains the overlays with a backdrop that are currently
-      // visible
-      if (element.opened) {
-        this._backdrops.push(element);
-      } else {
-        var index = this._backdrops.indexOf(element);
-        if (index >= 0) {
-          this._backdrops.splice(index, 1);
-        }
-      }
-    },
-
-    getBackdrops: function() {
-      return this._backdrops;
-    }
-
-  };
-
-</script>
-
-
-<!--
-`iron-overlay-backdrop` is a backdrop used by `Polymer.IronOverlayBehavior`. It should be a
-singleton.
-
-### Styling
-
-The following custom properties and mixins are available for styling.
-
-Custom property | Description | Default
--------------------------------------------|------------------------|---------
-`--iron-overlay-backdrop-background-color` | Backdrop background color                                     | #000
-`--iron-overlay-backdrop-opacity`          | Backdrop opacity                                              | 0.6
-`--iron-overlay-backdrop`                  | Mixin applied to `iron-overlay-backdrop`.                      | {}
-`--iron-overlay-backdrop-opened`           | Mixin applied to `iron-overlay-backdrop` when it is displayed | {}
--->
-
-<dom-module id="iron-overlay-backdrop">
-
-  <style>
-
-    :host {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background-color: var(--iron-overlay-backdrop-background-color, #000);
-      opacity: 0;
-      transition: opacity 0.2s;
-
-      @apply(--iron-overlay-backdrop);
-    }
-
-    :host([opened]) {
-      opacity: var(--iron-overlay-backdrop-opacity, 0.6);
-
-      @apply(--iron-overlay-backdrop-opened);
-    }
-
-  </style>
-
-  <template>
-    <content></content>
-  </template>
-
-</dom-module>
-
-<script>
-
-(function() {
-
-  Polymer({
-
-    is: 'iron-overlay-backdrop',
-
-    properties: {
-
-      /**
-       * Returns true if the backdrop is opened.
-       */
-      opened: {
-        readOnly: true,
-        reflectToAttribute: true,
-        type: Boolean,
-        value: false
-      },
-
-      _manager: {
-        type: Object,
-        value: Polymer.IronOverlayManager
-      }
-
-    },
-
-    /**
-     * Appends the backdrop to document body and sets its `z-index` to be below the latest overlay.
-     */
-    prepare: function() {
-      if (!this.parentNode) {
-        Polymer.dom(document.body).appendChild(this);
-        this.style.zIndex = this._manager.currentOverlayZ() - 1;
-      }
-    },
-
-    /**
-     * Shows the backdrop if needed.
-     */
-    open: function() {
-      // only need to make the backdrop visible if this is called by the first overlay with a backdrop
-      if (this._manager.getBackdrops().length < 2) {
-        this._setOpened(true);
-      }
-    },
-
-    /**
-     * Hides the backdrop if needed.
-     */
-    close: function() {
-      // only need to make the backdrop invisible if this is called by the last overlay with a backdrop
-      if (this._manager.getBackdrops().length < 2) {
-        this._setOpened(false);
-      }
-    },
-
-    /**
-     * Removes the backdrop from document body if needed.
-     */
-    complete: function() {
-      // only remove the backdrop if there are no more overlays with backdrops
-      if (this._manager.getBackdrops().length === 0 && this.parentNode) {
-        Polymer.dom(this.parentNode).removeChild(this);
-      }
-    }
-
-  });
-
-})();
-
-</script>
-
-
-
-
-
-
-
-
-<script>
-
-/**
-Use `Polymer.IronOverlayBehavior` to implement an element that can be hidden or shown, and displays
-on top of other content. It includes an optional backdrop, and can be used to implement a variety
-of UI controls including dialogs and drop downs. Multiple overlays may be displayed at once.
-
-### Closing and canceling
-
-A dialog may be hidden by closing or canceling. The difference between close and cancel is user
-intent. Closing generally implies that the user acknowledged the content on the overlay. By default,
-it will cancel whenever the user taps outside it or presses the escape key. This behavior is
-configurable with the `no-cancel-on-esc-key` and the `no-cancel-on-outside-click` properties.
-`close()` should be called explicitly by the implementer when the user interacts with a control
-in the overlay element. When the dialog is canceled, the overlay fires an 'iron-overlay-canceled'
-event. Call `preventDefault` on this event to prevent the overlay from closing.
-
-### Positioning
-
-By default the element is sized and positioned to fit and centered inside the window. You can
-position and size it manually using CSS. See `Polymer.IronFitBehavior`.
-
-### Backdrop
-
-Set the `with-backdrop` attribute to display a backdrop behind the overlay. The backdrop is
-appended to `<body>` and is of type `<iron-overlay-backdrop>`. See its doc page for styling
-options.
-
-### Limitations
-
-The element is styled to appear on top of other content by setting its `z-index` property. You
-must ensure no element has a stacking context with a higher `z-index` than its parent stacking
-context. You should place this element as a child of `<body>` whenever possible.
-
-@demo demo/index.html
-@polymerBehavior Polymer.IronOverlayBehavior
-*/
-
-  Polymer.IronOverlayBehaviorImpl = {
-
-    properties: {
-
-      /**
-       * True if the overlay is currently displayed.
-       */
-      opened: {
-        observer: '_openedChanged',
-        type: Boolean,
-        value: false,
-        notify: true
-      },
-
-      /**
-       * True if the overlay was canceled when it was last closed.
-       */
-      canceled: {
-        observer: '_canceledChanged',
-        readOnly: true,
-        type: Boolean,
-        value: false
-      },
-
-      /**
-       * Set to true to display a backdrop behind the overlay.
-       */
-      withBackdrop: {
-        type: Boolean,
-        value: false
-      },
-
-      /**
-       * Set to true to disable auto-focusing the overlay or child nodes with
-       * the `autofocus` attribute` when the overlay is opened.
-       */
-      noAutoFocus: {
-        type: Boolean,
-        value: false
-      },
-
-      /**
-       * Set to true to disable canceling the overlay with the ESC key.
-       */
-      noCancelOnEscKey: {
-        type: Boolean,
-        value: false
-      },
-
-      /**
-       * Set to true to disable canceling the overlay by clicking outside it.
-       */
-      noCancelOnOutsideClick: {
-        type: Boolean,
-        value: false
-      },
-
-      /**
-       * Returns the reason this dialog was last closed.
-       */
-      closingReason: {
-        // was a getter before, but needs to be a property so other
-        // behaviors can override this.
-        type: Object
-      },
-
-      _manager: {
-        type: Object,
-        value: Polymer.IronOverlayManager
-      },
-
-      _boundOnCaptureClick: {
-        type: Function,
-        value: function() {
-          return this._onCaptureClick.bind(this);
-        }
-      },
-
-      _boundOnCaptureKeydown: {
-        type: Function,
-        value: function() {
-          return this._onCaptureKeydown.bind(this);
-        }
-      }
-
-    },
-
-    listeners: {
-      'iron-resize': '_onIronResize'
-    },
-
-    /**
-     * The backdrop element.
-     * @type Node
-     */
-    get backdropElement() {
-      return this._backdrop;
-    },
-
-    get _focusNode() {
-      return Polymer.dom(this).querySelector('[autofocus]') || this;
-    },
-
-    registered: function() {
-      this._backdrop = document.createElement('iron-overlay-backdrop');
-    },
-
-    ready: function() {
-      this._ensureSetup();
-    },
-
-    attached: function() {
-      // Call _openedChanged here so that position can be computed correctly.
-      if (this._callOpenedWhenReady) {
-        this._openedChanged();
-      }
-    },
-
-    detached: function() {
-      this.opened = false;
-      this._completeBackdrop();
-      this._manager.removeOverlay(this);
-    },
-
-    /**
-     * Toggle the opened state of the overlay.
-     */
-    toggle: function() {
-      this.opened = !this.opened;
-    },
-
-    /**
-     * Open the overlay.
-     */
-    open: function() {
-      this.opened = true;
-      this.closingReason = {canceled: false};
-    },
-
-    /**
-     * Close the overlay.
-     */
-    close: function() {
-      this.opened = false;
-      this._setCanceled(false);
-    },
-
-    /**
-     * Cancels the overlay.
-     */
-    cancel: function() {
-      var cancelEvent = this.fire('iron-overlay-canceled', undefined, {cancelable: true});
-      if (cancelEvent.defaultPrevented) {
-        return;
-      }
-
-      this.opened = false;
-      this._setCanceled(true);
-    },
-
-    _ensureSetup: function() {
-      if (this._overlaySetup) {
-        return;
-      }
-      this._overlaySetup = true;
-      this.style.outline = 'none';
-      this.style.display = 'none';
-    },
-
-    _openedChanged: function() {
-      if (this.opened) {
-        this.removeAttribute('aria-hidden');
-      } else {
-        this.setAttribute('aria-hidden', 'true');
-      }
-
-      // wait to call after ready only if we're initially open
-      if (!this._overlaySetup) {
-        this._callOpenedWhenReady = this.opened;
-        return;
-      }
-      if (this._openChangedAsync) {
-        this.cancelAsync(this._openChangedAsync);
-      }
-
-      this._toggleListeners();
-
-      if (this.opened) {
-        this._prepareRenderOpened();
-      }
-
-      // async here to allow overlay layer to become visible.
-      this._openChangedAsync = this.async(function() {
-        // overlay becomes visible here
-        this.style.display = '';
-        // force layout to ensure transitions will go
-        /** @suppress {suspiciousCode} */ this.offsetWidth;
-        if (this.opened) {
-          this._renderOpened();
-        } else {
-          this._renderClosed();
-        }
-        this._openChangedAsync = null;
-      });
-
-    },
-
-    _canceledChanged: function() {
-      this.closingReason = this.closingReason || {};
-      this.closingReason.canceled = this.canceled;
-    },
-
-    _toggleListener: function(enable, node, event, boundListener, capture) {
-      if (enable) {
-        // enable document-wide tap recognizer
-        if (event === 'tap') {
-          Polymer.Gestures.add(document, 'tap', null);
-        }
-        node.addEventListener(event, boundListener, capture);
-      } else {
-        // disable document-wide tap recognizer
-        if (event === 'tap') {
-          Polymer.Gestures.remove(document, 'tap', null);
-        }
-        node.removeEventListener(event, boundListener, capture);
-      }
-    },
-
-    _toggleListeners: function() {
-      if (this._toggleListenersAsync) {
-        this.cancelAsync(this._toggleListenersAsync);
-      }
-      // async so we don't auto-close immediately via a click.
-      this._toggleListenersAsync = this.async(function() {
-        this._toggleListener(this.opened, document, 'tap', this._boundOnCaptureClick, true);
-        this._toggleListener(this.opened, document, 'keydown', this._boundOnCaptureKeydown, true);
-        this._toggleListenersAsync = null;
-      }, 1);
-    },
-
-    // tasks which must occur before opening; e.g. making the element visible
-    _prepareRenderOpened: function() {
-      this._manager.addOverlay(this);
-
-      if (this.withBackdrop) {
-        this.backdropElement.prepare();
-        this._manager.trackBackdrop(this);
-      }
-
-      this._preparePositioning();
-      this.fit();
-      this._finishPositioning();
-    },
-
-    // tasks which cause the overlay to actually open; typically play an
-    // animation
-    _renderOpened: function() {
-      if (this.withBackdrop) {
-        this.backdropElement.open();
-      }
-      this._finishRenderOpened();
-    },
-
-    _renderClosed: function() {
-      if (this.withBackdrop) {
-        this.backdropElement.close();
-      }
-      this._finishRenderClosed();
-    },
-
-    _onTransitionend: function(event) {
-      // make sure this is our transition event.
-      if (event && event.target !== this) {
-        return;
-      }
-      if (this.opened) {
-        this._finishRenderOpened();
-      } else {
-        this._finishRenderClosed();
-      }
-    },
-
-    _finishRenderOpened: function() {
-      // focus the child node with [autofocus]
-      if (!this.noAutoFocus) {
-        this._focusNode.focus();
-      }
-
-      this.fire('iron-overlay-opened');
-
-      this._squelchNextResize = true;
-      this.async(this.notifyResize);
-    },
-
-    _finishRenderClosed: function() {
-      // hide the overlay and remove the backdrop
-      this.resetFit();
-      this.style.display = 'none';
-      this._completeBackdrop();
-      this._manager.removeOverlay(this);
-
-      this._focusNode.blur();
-      // focus the next overlay, if there is one
-      this._manager.focusOverlay();
-
-      this.fire('iron-overlay-closed', this.closingReason);
-
-      this._squelchNextResize = true;
-      this.async(this.notifyResize);
-    },
-
-    _completeBackdrop: function() {
-      if (this.withBackdrop) {
-        this._manager.trackBackdrop(this);
-        this.backdropElement.complete();
-      }
-    },
-
-    _preparePositioning: function() {
-      this.style.transition = this.style.webkitTransition = 'none';
-      this.style.transform = this.style.webkitTransform = 'none';
-      this.style.display = '';
-    },
-
-    _finishPositioning: function() {
-      this.style.display = 'none';
-      this.style.transform = this.style.webkitTransform = '';
-      // force layout to avoid application of transform
-      /** @suppress {suspiciousCode} */ this.offsetWidth;
-      this.style.transition = this.style.webkitTransition = '';
-    },
-
-    _applyFocus: function() {
-      if (this.opened) {
-        if (!this.noAutoFocus) {
-          this._focusNode.focus();
-        }
-      } else {
-        this._focusNode.blur();
-        this._manager.focusOverlay();
-      }
-    },
-
-    _onCaptureClick: function(event) {
-      if (!this.noCancelOnOutsideClick &&
-          this._manager.currentOverlay() === this &&
-          Polymer.dom(event).path.indexOf(this) === -1) {
-        this.cancel();
-      }
-    },
-
-    _onCaptureKeydown: function(event) {
-      var ESC = 27;
-      if (!this.noCancelOnEscKey && (event.keyCode === ESC)) {
-        this.cancel();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-      }
-    },
-
-    _onIronResize: function() {
-      if (this._squelchNextResize) {
-        this._squelchNextResize = false;
-        return;
-      }
-      if (this.opened) {
-        this.refit();
-      }
-    }
-
-/**
- * Fired after the `iron-overlay` opens.
- * @event iron-overlay-opened
- */
-
-/**
- * Fired when the `iron-overlay` is canceled, but before it is closed.
- * Cancel the event to prevent the `iron-overlay` from closing.
- * @event iron-overlay-canceled
- */
-
-/**
- * Fired after the `iron-overlay` closes.
- * @event iron-overlay-closed
- * @param {{canceled: (boolean|undefined)}} set to the `closingReason` attribute
- */
-  };
-
-  /** @polymerBehavior */
-  Polymer.IronOverlayBehavior = [Polymer.IronFitBehavior, Polymer.IronResizableBehavior, Polymer.IronOverlayBehaviorImpl];
-
-
-</script>
-
-
-
-
-
-
-
-<!-- Taken from https://www.google.com/design/spec/style/color.html#color-ui-color-application -->
-
-<style is="custom-style">
-
-  :root {
-    /*
-     * You can use these generic variables in your elements for easy theming.
-     * For example, if all your elements use `--primary-text-color` as its main
-     * color, then switching from a light to a dark theme is just a matter of
-     * changing the value of `--primary-text-color` in your application.
-     */
-    --primary-text-color: var(--light-theme-text-color);
-    --primary-background-color: var(--light-theme-background-color);
-    --secondary-text-color: var(--light-theme-secondary-color);
-    --disabled-text-color: var(--light-theme-disabled-color);
-    --divider-color: var(--light-theme-divider-color);
-
-    /*
-     * Primary and accent colors. Also see color.html for more colors.
-     */
-    --primary-color: #3f51b5;  /* --paper-indigo-500 */
-    --light-primary-color: #c5cae9;  /* --paper-indigo-100 */
-    --dark-primary-color: #303f9f;  /* --paper-indigo-700 */
-
-    --accent-color: #ff4081;  /* --paper-pink-a200 */
-    --light-accent-color: #ff80ab;  /* --paper-pink-a100 */
-    --dark-accent-color: #f50057;  /* --paper-pink-a400 */
-
-    /*
-     * Material Design Light background theme
-     */
-    --light-theme-background-color: #ffffff;
-    --light-theme-base-color: #000000;
-    --light-theme-text-color: #212121;
-    --light-theme-secondary-color: #737373;  /* for secondary text and icons */
-    --light-theme-disabled-color: #9b9b9b;  /* disabled/hint text */
-    --light-theme-divider-color: #dbdbdb;
-
-    /*
-     * Material Design Dark background theme
-     */
-    --dark-theme-background-color: #212121;
-    --dark-theme-base-color: #ffffff;
-    --dark-theme-text-color: #ffffff;
-    --dark-theme-secondary-color: #bcbcbc;  /* for secondary text and icons */
-    --dark-theme-disabled-color: #646464;  /* disabled/hint text */
-    --dark-theme-divider-color: #3c3c3c;
-
-    /*
-     * Deprecated values because of their confusing names.
-     */
-    --text-primary-color: var(--dark-theme-text-color);
-    --default-primary-color: var(--primary-color);
-
-  }
-
-</style>
-
-
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic,500,500italic,700,700italic">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,700">
-
-
-
-
-
-<style is="custom-style">
-
-  :root {
-
-    /* Shared Styles */
-    --paper-font-common-base: {
-      font-family: 'Roboto', 'Noto', sans-serif;
-      -webkit-font-smoothing: antialiased;
-    };
-
-    --paper-font-common-code: {
-      font-family: 'Roboto Mono', 'Consolas', 'Menlo', monospace;
-      -webkit-font-smoothing: antialiased;
-    };
-
-    --paper-font-common-expensive-kerning: {
-      text-rendering: optimizeLegibility;
-    };
-
-    --paper-font-common-nowrap: {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    };
-
-    /* Material Font Styles */
-
-    --paper-font-display4: {
-      @apply(--paper-font-common-base);
-      @apply(--paper-font-common-nowrap);
-
-      font-size: 112px;
-      font-weight: 300;
-      letter-spacing: -.044em;
-      line-height: 120px;
-    };
-
-    --paper-font-display3: {
-      @apply(--paper-font-common-base);
-      @apply(--paper-font-common-nowrap);
-
-      font-size: 56px;
-      font-weight: 400;
-      letter-spacing: -.026em;
-      line-height: 60px;
-    };
-
-    --paper-font-display2: {
-      @apply(--paper-font-common-base);
-
-      font-size: 45px;
-      font-weight: 400;
-      letter-spacing: -.018em;
-      line-height: 48px;
-    };
-
-    --paper-font-display1: {
-      @apply(--paper-font-common-base);
-
-      font-size: 34px;
-      font-weight: 400;
-      letter-spacing: -.01em;
-      line-height: 40px;
-    };
-
-    --paper-font-headline: {
-      @apply(--paper-font-common-base);
-
-      font-size: 24px;
-      font-weight: 400;
-      letter-spacing: -.012em;
-      line-height: 32px;
-    };
-
-    --paper-font-title: {
-      @apply(--paper-font-common-base);
-      @apply(--paper-font-common-nowrap);
-
-      font-size: 20px;
-      font-weight: 500;
-      line-height: 28px;
-    };
-
-    --paper-font-subhead: {
-      @apply(--paper-font-common-base);
-
-      font-size: 16px;
-      font-weight: 400;
-      line-height: 24px;
-    };
-
-    --paper-font-body2: {
-      @apply(--paper-font-common-base);
-
-      font-size: 14px;
-      font-weight: 500;
-      line-height: 24px;
-    };
-
-    --paper-font-body1: {
-      @apply(--paper-font-common-base);
-
-      font-size: 14px;
-      font-weight: 400;
-      line-height: 20px;
-    };
-
-    --paper-font-caption: {
-      @apply(--paper-font-common-base);
-      @apply(--paper-font-common-nowrap);
-
-      font-size: 12px;
-      font-weight: 400;
-      letter-spacing: 0.011em;
-      line-height: 20px;
-    };
-
-    --paper-font-menu: {
-      @apply(--paper-font-common-base);
-      @apply(--paper-font-common-nowrap);
-
-      font-size: 13px;
-      font-weight: 500;
-      line-height: 24px;
-    };
-
-    --paper-font-button: {
-      @apply(--paper-font-common-base);
-      @apply(--paper-font-common-nowrap);
-
-      font-size: 14px;
-      font-weight: 500;
-      letter-spacing: 0.018em;
-      line-height: 24px;
-      text-transform: uppercase;
-    };
-
-    --paper-font-code2: {
-      @apply(--paper-font-common-code);
-
-      font-size: 14px;
-      font-weight: 700;
-      line-height: 20px;
-    };
-
-    --paper-font-code1: {
-      @apply(--paper-font-common-code);
-
-      font-size: 14px;
-      font-weight: 500;
-      line-height: 20px;
-    };
-
-  }
-
-</style>
-
-
-
-
-
-
-
-
-
-
-<script>
-
-/**
-Use `Polymer.PaperDialogBehavior` and `paper-dialog-shared-styles.html` to implement a Material Design
-dialog.
-
-For example, if `<paper-dialog-impl>` implements this behavior:
-
-    <paper-dialog-impl>
-        <h2>Header</h2>
-        <div>Dialog body</div>
-        <div class="buttons">
-            <paper-button dialog-dismiss>Cancel</paper-button>
-            <paper-button dialog-confirm>Accept</paper-button>
-        </div>
-    </paper-dialog-impl>
-
-`paper-dialog-shared-styles.html` provide styles for a header, content area, and an action area for buttons.
-Use the `<h2>` tag for the header and the `buttons` class for the action area. You can use the
-`paper-dialog-scrollable` element (in its own repository) if you need a scrolling content area.
-
-Use the `dialog-dismiss` and `dialog-confirm` attributes on interactive controls to close the
-dialog. If the user dismisses the dialog with `dialog-confirm`, the `closingReason` will update
-to include `confirmed: true`.
-
-### Styling
-
-The following custom properties and mixins are available for styling.
-
-Custom property | Description | Default
-----------------|-------------|----------
-`--paper-dialog-background-color` | Dialog background color                     | `--primary-background-color`
-`--paper-dialog-color`            | Dialog foreground color                     | `--primary-text-color`
-`--paper-dialog`                  | Mixin applied to the dialog                 | `{}`
-`--paper-dialog-title`            | Mixin applied to the title (`<h2>`) element | `{}`
-`--paper-dialog-button-color`     | Button area foreground color                | `--default-primary-color`
-
-### Accessibility
-
-This element has `role="dialog"` by default. Depending on the context, it may be more appropriate
-to override this attribute with `role="alertdialog"`.
-
-If `modal` is set, the element will set `aria-modal` and prevent the focus from exiting the element.
-It will also ensure that focus remains in the dialog.
-
-The `aria-labelledby` attribute will be set to the header element, if one exists.
-
-@hero hero.svg
-@demo demo/index.html
-@polymerBehavior Polymer.PaperDialogBehavior
-*/
-
-  Polymer.PaperDialogBehaviorImpl = {
-
-    hostAttributes: {
-      'role': 'dialog',
-      'tabindex': '-1'
-    },
-
-    properties: {
-
-      /**
-       * If `modal` is true, this implies `no-cancel-on-outside-click` and `with-backdrop`.
-       */
-      modal: {
-        observer: '_modalChanged',
-        type: Boolean,
-        value: false
-      },
-
-      /** @type {?Node} */
-      _lastFocusedElement: {
-        type: Object
-      },
-
-      _boundOnFocus: {
-        type: Function,
-        value: function() {
-          return this._onFocus.bind(this);
-        }
-      },
-
-      _boundOnBackdropClick: {
-        type: Function,
-        value: function() {
-          return this._onBackdropClick.bind(this);
-        }
-      }
-
-    },
-
-    listeners: {
-      'tap': '_onDialogClick',
-      'iron-overlay-opened': '_onIronOverlayOpened',
-      'iron-overlay-closed': '_onIronOverlayClosed'
-    },
-
-    attached: function() {
-      this._observer = this._observe(this);
-      this._updateAriaLabelledBy();
-    },
-
-    detached: function() {
-      if (this._observer) {
-        this._observer.disconnect();
-      }
-    },
-
-    _observe: function(node) {
-      var observer = new MutationObserver(function() {
-        this._updateAriaLabelledBy();
-      }.bind(this));
-      observer.observe(node, {
-        childList: true,
-        subtree: true
-      });
-      return observer;
-    },
-
-    _modalChanged: function() {
-      if (this.modal) {
-        this.setAttribute('aria-modal', 'true');
-      } else {
-        this.setAttribute('aria-modal', 'false');
-      }
-      // modal implies noCancelOnOutsideClick and withBackdrop if true, don't overwrite
-      // those properties otherwise.
-      if (this.modal) {
-        this.noCancelOnOutsideClick = true;
-        this.withBackdrop = true;
-      }
-    },
-
-    _updateAriaLabelledBy: function() {
-      var header = Polymer.dom(this).querySelector('h2');
-      if (!header) {
-        this.removeAttribute('aria-labelledby');
-        return;
-      }
-      var headerId = header.getAttribute('id');
-      if (headerId && this.getAttribute('aria-labelledby') === headerId) {
-        return;
-      }
-      // set aria-describedBy to the header element
-      var labelledById;
-      if (headerId) {
-        labelledById = headerId;
-      } else {
-        labelledById = 'paper-dialog-header-' + new Date().getUTCMilliseconds();
-        header.setAttribute('id', labelledById);
-      }
-      this.setAttribute('aria-labelledby', labelledById);
-    },
-
-    _updateClosingReasonConfirmed: function(confirmed) {
-      this.closingReason = this.closingReason || {};
-      this.closingReason.confirmed = confirmed;
-    },
-
-    _onDialogClick: function(event) {
-      var target = event.target;
-      while (target && target !== this) {
-        if (target.hasAttribute) {
-          if (target.hasAttribute('dialog-dismiss')) {
-            this._updateClosingReasonConfirmed(false);
-            this.close();
-            break;
-          } else if (target.hasAttribute('dialog-confirm')) {
-            this._updateClosingReasonConfirmed(true);
-            this.close();
-            break;
-          }
-        }
-        target = target.parentNode;
-      }
-    },
-
-    _onIronOverlayOpened: function() {
-      if (this.modal) {
-        document.body.addEventListener('focus', this._boundOnFocus, true);
-        this.backdropElement.addEventListener('click', this._boundOnBackdropClick);
-      }
-    },
-
-    _onIronOverlayClosed: function() {
-      document.body.removeEventListener('focus', this._boundOnFocus, true);
-      this.backdropElement.removeEventListener('click', this._boundOnBackdropClick);
-    },
-
-    _onFocus: function(event) {
-      if (this.modal) {
-        var target = event.target;
-        while (target && target !== this && target !== document.body) {
-          target = target.parentNode;
-        }
-        if (target) {
-          if (target === document.body) {
-            if (this._lastFocusedElement) {
-              this._lastFocusedElement.focus();
-            } else {
-              this._focusNode.focus();
-            }
-          } else {
-            this._lastFocusedElement = event.target;
-          }
-        }
-      }
-    },
-
-    _onBackdropClick: function() {
-      if (this.modal) {
-        if (this._lastFocusedElement) {
-          this._lastFocusedElement.focus();
-        } else {
-          this._focusNode.focus();
-        }
-      }
-    }
-
-  };
-
-  /** @polymerBehavior */
-  Polymer.PaperDialogBehavior = [Polymer.IronOverlayBehavior, Polymer.PaperDialogBehaviorImpl];
-
-</script>
-
-
-
-
-
-
-
-
-
-<!--
-`iron-meta` is a generic element you can use for sharing information across the DOM tree.
-It uses [monostate pattern](http://c2.com/cgi/wiki?MonostatePattern) such that any
-instance of iron-meta has access to the shared
-information. You can use `iron-meta` to share whatever you want (or create an extension
-[like x-meta] for enhancements).
-
-The `iron-meta` instances containing your actual data can be loaded in an import,
-or constructed in any way you see fit. The only requirement is that you create them
-before you try to access them.
-
-Examples:
-
-If I create an instance like this:
-
-    <iron-meta key="info" value="foo/bar"></iron-meta>
-
-Note that value="foo/bar" is the metadata I've defined. I could define more
-attributes or use child nodes to define additional metadata.
-
-Now I can access that element (and it's metadata) from any iron-meta instance
-via the byKey method, e.g.
-
-    meta.byKey('info').getAttribute('value');
-
-Pure imperative form would be like:
-
-    document.createElement('iron-meta').byKey('info').getAttribute('value');
-
-Or, in a Polymer element, you can include a meta in your template:
-
-    <iron-meta id="meta"></iron-meta>
-    ...
-    this.$.meta.byKey('info').getAttribute('value');
-
-@group Iron Elements
-@demo demo/index.html
-@hero hero.svg
-@element iron-meta
--->
-
-<script>
-
-  (function() {
-
-    // monostate data
-    var metaDatas = {};
-    var metaArrays = {};
-    var singleton = null;
-
-    Polymer.IronMeta = Polymer({
-
-      is: 'iron-meta',
-
-      properties: {
-
-        /**
-         * The type of meta-data.  All meta-data of the same type is stored
-         * together.
-         */
-        type: {
-          type: String,
-          value: 'default',
-          observer: '_typeChanged'
-        },
-
-        /**
-         * The key used to store `value` under the `type` namespace.
-         */
-        key: {
-          type: String,
-          observer: '_keyChanged'
-        },
-
-        /**
-         * The meta-data to store or retrieve.
-         */
-        value: {
-          type: Object,
-          notify: true,
-          observer: '_valueChanged'
-        },
-
-        /**
-         * If true, `value` is set to the iron-meta instance itself.
-         */
-         self: {
-          type: Boolean,
-          observer: '_selfChanged'
-        },
-
-        /**
-         * Array of all meta-data values for the given type.
-         */
-        list: {
-          type: Array,
-          notify: true
-        }
-
-      },
-
-      hostAttributes: {
-        hidden: true
-      },
-
-      /**
-       * Only runs if someone invokes the factory/constructor directly
-       * e.g. `new Polymer.IronMeta()`
-       *
-       * @param {{type: (string|undefined), key: (string|undefined), value}=} config
-       */
-      factoryImpl: function(config) {
-        if (config) {
-          for (var n in config) {
-            switch(n) {
-              case 'type':
-              case 'key':
-              case 'value':
-                this[n] = config[n];
-                break;
-            }
-          }
-        }
-      },
-
-      created: function() {
-        // TODO(sjmiles): good for debugging?
-        this._metaDatas = metaDatas;
-        this._metaArrays = metaArrays;
-      },
-
-      _keyChanged: function(key, old) {
-        this._resetRegistration(old);
-      },
-
-      _valueChanged: function(value) {
-        this._resetRegistration(this.key);
-      },
-
-      _selfChanged: function(self) {
-        if (self) {
-          this.value = this;
-        }
-      },
-
-      _typeChanged: function(type) {
-        this._unregisterKey(this.key);
-        if (!metaDatas[type]) {
-          metaDatas[type] = {};
-        }
-        this._metaData = metaDatas[type];
-        if (!metaArrays[type]) {
-          metaArrays[type] = [];
-        }
-        this.list = metaArrays[type];
-        this._registerKeyValue(this.key, this.value);
-      },
-
-      /**
-       * Retrieves meta data value by key.
-       *
-       * @method byKey
-       * @param {string} key The key of the meta-data to be returned.
-       * @return {*}
-       */
-      byKey: function(key) {
-        return this._metaData && this._metaData[key];
-      },
-
-      _resetRegistration: function(oldKey) {
-        this._unregisterKey(oldKey);
-        this._registerKeyValue(this.key, this.value);
-      },
-
-      _unregisterKey: function(key) {
-        this._unregister(key, this._metaData, this.list);
-      },
-
-      _registerKeyValue: function(key, value) {
-        this._register(key, value, this._metaData, this.list);
-      },
-
-      _register: function(key, value, data, list) {
-        if (key && data && value !== undefined) {
-          data[key] = value;
-          list.push(value);
-        }
-      },
-
-      _unregister: function(key, data, list) {
-        if (key && data) {
-          if (key in data) {
-            var value = data[key];
-            delete data[key];
-            this.arrayDelete(list, value);
-          }
-        }
-      }
-
-    });
-
-    Polymer.IronMeta.getIronMeta = function getIronMeta() {
-       if (singleton === null) {
-         singleton = new Polymer.IronMeta();
-       }
-       return singleton;
-     };
-
-    /**
-    `iron-meta-query` can be used to access infomation stored in `iron-meta`.
-
-    Examples:
-
-    If I create an instance like this:
-
-        <iron-meta key="info" value="foo/bar"></iron-meta>
-
-    Note that value="foo/bar" is the metadata I've defined. I could define more
-    attributes or use child nodes to define additional metadata.
-
-    Now I can access that element (and it's metadata) from any `iron-meta-query` instance:
-
-         var value = new Polymer.IronMetaQuery({key: 'info'}).value;
-
-    @group Polymer Iron Elements
-    @element iron-meta-query
-    */
-    Polymer.IronMetaQuery = Polymer({
-
-      is: 'iron-meta-query',
-
-      properties: {
-
-        /**
-         * The type of meta-data.  All meta-data of the same type is stored
-         * together.
-         */
-        type: {
-          type: String,
-          value: 'default',
-          observer: '_typeChanged'
-        },
-
-        /**
-         * Specifies a key to use for retrieving `value` from the `type`
-         * namespace.
-         */
-        key: {
-          type: String,
-          observer: '_keyChanged'
-        },
-
-        /**
-         * The meta-data to store or retrieve.
-         */
-        value: {
-          type: Object,
-          notify: true,
-          readOnly: true
-        },
-
-        /**
-         * Array of all meta-data values for the given type.
-         */
-        list: {
-          type: Array,
-          notify: true
-        }
-
-      },
-
-      /**
-       * Actually a factory method, not a true constructor. Only runs if
-       * someone invokes it directly (via `new Polymer.IronMeta()`);
-       *
-       * @param {{type: (string|undefined), key: (string|undefined)}=} config
-       */
-      factoryImpl: function(config) {
-        if (config) {
-          for (var n in config) {
-            switch(n) {
-              case 'type':
-              case 'key':
-                this[n] = config[n];
-                break;
-            }
-          }
-        }
-      },
-
-      created: function() {
-        // TODO(sjmiles): good for debugging?
-        this._metaDatas = metaDatas;
-        this._metaArrays = metaArrays;
-      },
-
-      _keyChanged: function(key) {
-        this._setValue(this._metaData && this._metaData[key]);
-      },
-
-      _typeChanged: function(type) {
-        this._metaData = metaDatas[type];
-        this.list = metaArrays[type];
-        if (this.key) {
-          this._keyChanged(this.key);
-        }
-      },
-
-      /**
-       * Retrieves meta data value by key.
-       * @param {string} key The key of the meta-data to be returned.
-       * @return {*}
-       */
-      byKey: function(key) {
-        return this._metaData && this._metaData[key];
-      }
-
-    });
-
-  })();
-</script>
-
-
-
-
-
-<script>
-
-  /**
-   * Use `Polymer.NeonAnimationBehavior` to implement an animation.
-   * @polymerBehavior
-   */
-  Polymer.NeonAnimationBehavior = {
-
-    properties: {
-
-      /**
-       * Defines the animation timing.
-       */
-      animationTiming: {
-        type: Object,
-        value: function() {
-          return {
-            duration: 500,
-            easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
-            fill: 'both'
-          }
-        }
-      }
-
-    },
-
-    registered: function() {
-      new Polymer.IronMeta({type: 'animation', key: this.is, value: this.constructor});
-    },
-
-    /**
-     * Do any animation configuration here.
-     */
-    // configure: function(config) {
-    // },
-
-    /**
-     * Returns the animation timing by mixing in properties from `config` to the defaults defined
-     * by the animation.
-     */
-    timingFromConfig: function(config) {
-      if (config.timing) {
-        for (var property in config.timing) {
-          this.animationTiming[property] = config.timing[property];
-        }
-      }
-      return this.animationTiming;
-    },
-
-    /**
-     * Sets `transform` and `transformOrigin` properties along with the prefixed versions.
-     */
-    setPrefixedProperty: function(node, property, value) {
-      var map = {
-        'transform': ['webkitTransform'],
-        'transformOrigin': ['mozTransformOrigin', 'webkitTransformOrigin']
-      };
-      var prefixes = map[property];
-      for (var prefix, index = 0; prefix = prefixes[index]; index++) {
-        node.style[prefix] = value;
-      }
-      node.style[property] = value;
-    },
-
-    /**
-     * Called when the animation finishes.
-     */
-    complete: function() {}
-
-  };
-
-</script>
-
-
-
-
-
-<script src="packages/polymer_elements/src/web-animations-js/web-animations-next-lite.min.js"></script>
-
-
-<!--
-`<opaque-animation>` makes an element `opacity:1` for the duration of the animation. Used to prevent
-webkit/safari from drawing a frame before an animation for elements that animate from display:none.
--->
-
-<script>
-
-  Polymer({
-
-    is: 'opaque-animation',
-
-    behaviors: [
-      Polymer.NeonAnimationBehavior
-    ],
-
-    configure: function(config) {
-      var node = config.node;
-      node.style.opacity = '0';
-      this._effect = new KeyframeEffect(node, [
-        {'opacity': '1'},
-        {'opacity': '1'}
-      ], this.timingFromConfig(config));
-      return this._effect;
-    },
-
-    complete: function(config) {
-      config.node.style.opacity = '';
-    }
-
-  });
-
-</script>
-
-
-
-
-
-
-<script>
-
-  /**
-   * `Polymer.NeonAnimatableBehavior` is implemented by elements containing animations for use with
-   * elements implementing `Polymer.NeonAnimationRunnerBehavior`.
-   * @polymerBehavior
-   */
-  Polymer.NeonAnimatableBehavior = {
-
-    properties: {
-
-      /**
-       * Animation configuration. See README for more info.
-       */
-      animationConfig: {
-        type: Object
-      },
-
-      /**
-       * Convenience property for setting an 'entry' animation. Do not set `animationConfig.entry`
-       * manually if using this. The animated node is set to `this` if using this property.
-       */
-      entryAnimation: {
-        observer: '_entryAnimationChanged',
-        type: String
-      },
-
-      /**
-       * Convenience property for setting an 'exit' animation. Do not set `animationConfig.exit`
-       * manually if using this. The animated node is set to `this` if using this property.
-       */
-      exitAnimation: {
-        observer: '_exitAnimationChanged',
-        type: String
-      }
-
-    },
-
-    _entryAnimationChanged: function() {
-      this.animationConfig = this.animationConfig || {};
-      if (this.entryAnimation !== 'fade-in-animation') {
-        // insert polyfill hack
-        this.animationConfig['entry'] = [{
-          name: 'opaque-animation',
-          node: this
-        }, {
-          name: this.entryAnimation,
-          node: this
-        }];
-      } else {
-        this.animationConfig['entry'] = [{
-          name: this.entryAnimation,
-          node: this
-        }];
-      }
-    },
-
-    _exitAnimationChanged: function() {
-      this.animationConfig = this.animationConfig || {};
-      this.animationConfig['exit'] = [{
-        name: this.exitAnimation,
-        node: this
-      }];
-    },
-
-    _copyProperties: function(config1, config2) {
-      // shallowly copy properties from config2 to config1
-      for (var property in config2) {
-        config1[property] = config2[property];
-      }
-    },
-
-    _cloneConfig: function(config) {
-      var clone = {
-        isClone: true
-      };
-      this._copyProperties(clone, config);
-      return clone;
-    },
-
-    _getAnimationConfigRecursive: function(type, map, allConfigs) {
-      if (!this.animationConfig) {
-        return;
-      }
-
-      // type is optional
-      var thisConfig;
-      if (type) {
-        thisConfig = this.animationConfig[type];
-      } else {
-        thisConfig = this.animationConfig;
-      }
-
-      if (!Array.isArray(thisConfig)) {
-        thisConfig = [thisConfig];
-      }
-
-      // iterate animations and recurse to process configurations from child nodes
-      if (thisConfig) {
-        for (var config, index = 0; config = thisConfig[index]; index++) {
-          if (config.animatable) {
-            config.animatable._getAnimationConfigRecursive(config.type || type, map, allConfigs);
-          } else {
-            if (config.id) {
-              var cachedConfig = map[config.id];
-              if (cachedConfig) {
-                // merge configurations with the same id, making a clone lazily
-                if (!cachedConfig.isClone) {
-                  map[config.id] = this._cloneConfig(cachedConfig)
-                  cachedConfig = map[config.id];
-                }
-                this._copyProperties(cachedConfig, config);
-              } else {
-                // put any configs with an id into a map
-                map[config.id] = config;
-              }
-            } else {
-              allConfigs.push(config);
-            }
-          }
-        }
-      }
-    },
-
-    /**
-     * An element implementing `Polymer.NeonAnimationRunnerBehavior` calls this method to configure
-     * an animation with an optional type. Elements implementing `Polymer.NeonAnimatableBehavior`
-     * should define the property `animationConfig`, which is either a configuration object
-     * or a map of animation type to array of configuration objects.
-     */
-    getAnimationConfig: function(type) {
-      var map = {};
-      var allConfigs = [];
-      this._getAnimationConfigRecursive(type, map, allConfigs);
-      // append the configurations saved in the map to the array
-      for (var key in map) {
-        allConfigs.push(map[key]);
-      }
-      return allConfigs;
-    }
-
-  };
-
-</script>
-
-
-
-
-
-
-
-<script>
-
-  /**
-   * `Polymer.NeonAnimationRunnerBehavior` adds a method to run animations.
-   *
-   * @polymerBehavior Polymer.NeonAnimationRunnerBehavior
-   */
-  Polymer.NeonAnimationRunnerBehaviorImpl = {
-
-    properties: {
-
-      _animationMeta: {
-        type: Object,
-        value: function() {
-          return new Polymer.IronMeta({type: 'animation'});
-        }
-      },
-
-      /** @type {?Object} */
-      _player: {
-        type: Object
-      }
-
-    },
-
-    _configureAnimationEffects: function(allConfigs) {
-      var allAnimations = [];
-      if (allConfigs.length > 0) {
-        for (var config, index = 0; config = allConfigs[index]; index++) {
-          var animationConstructor = this._animationMeta.byKey(config.name);
-          if (animationConstructor) {
-            var animation = animationConstructor && new animationConstructor();
-            var effect = animation.configure(config);
-            if (effect) {
-              allAnimations.push({
-                animation: animation,
-                config: config,
-                effect: effect
-              });
-            }
-          } else {
-            console.warn(this.is + ':', config.name, 'not found!');
-          }
-        }
-      }
-      return allAnimations;
-    },
-
-    _runAnimationEffects: function(allEffects) {
-      return document.timeline.play(new GroupEffect(allEffects));
-    },
-
-    _completeAnimations: function(allAnimations) {
-      for (var animation, index = 0; animation = allAnimations[index]; index++) {
-        animation.animation.complete(animation.config);
-      }
-    },
-
-    /**
-     * Plays an animation with an optional `type`.
-     * @param {string=} type
-     * @param {!Object=} cookie
-     */
-    playAnimation: function(type, cookie) {
-      var allConfigs = this.getAnimationConfig(type);
-      if (!allConfigs) {
-        return;
-      }
-      var allAnimations = this._configureAnimationEffects(allConfigs);
-      var allEffects = allAnimations.map(function(animation) {
-        return animation.effect;
-      });
-
-      if (allEffects.length > 0) {
-        this._player = this._runAnimationEffects(allEffects);
-        this._player.onfinish = function() {
-          this._completeAnimations(allAnimations);
-
-          if (this._player) {
-            this._player.cancel();
-            this._player = null;
-          }
-
-          this.fire('neon-animation-finish', cookie, {bubbles: false});
-        }.bind(this);
-
-      } else {
-        this.fire('neon-animation-finish', cookie, {bubbles: false});
-      }
-    },
-
-    /**
-     * Cancels the currently running animation.
-     */
-    cancelAnimation: function() {
-      if (this._player) {
-        this._player.cancel();
-      }
-    }
-  };
-
-  /** @polymerBehavior Polymer.NeonAnimationRunnerBehavior */
-  Polymer.NeonAnimationRunnerBehavior = [
-    Polymer.NeonAnimatableBehavior,
-    Polymer.NeonAnimationRunnerBehaviorImpl
-  ];
-</script>
-
-
-
-
-<dom-module id="paper-dialog-shared-styles">
-  <template>
-    <style>
-      :host {
-        display: block;
-        margin: 24px 40px;
-        -webkit-overflow-scrolling: touch;
-
-        background: var(--paper-dialog-background-color, --primary-background-color);
-        color: var(--paper-dialog-color, --primary-text-color);
-
-        @apply(--paper-font-body1);
-        @apply(--shadow-elevation-16dp);
-        @apply(--paper-dialog);
-      }
-
-      :host > ::content > * {
-        margin-top: 20px;
-        padding: 0 24px;
-      }
-
-      :host > ::content > .no-padding {
-        padding: 0;
-      }
-
-      :host > ::content > *:first-child {
-        margin-top: 24px;
-      }
-
-      :host > ::content > *:last-child {
-        margin-bottom: 24px;
-      }
-
-      :host > ::content h2 {
-        position: relative;
-        margin: 0;
-        @apply(--paper-font-title);
-
-        @apply(--paper-dialog-title);
-      }
-
-      :host > ::content .buttons {
-        position: relative;
-        padding: 8px 8px 8px 24px;
-        margin: 0;
-
-        color: var(--paper-dialog-button-color, --default-primary-color);
-
-        @apply(--layout-horizontal);
-        @apply(--layout-end-justified);
-      }
-    </style>
-  </template>
-</dom-module>
-
-
-
-
-
-
-<!--
-Material design: [Dialogs](https://www.google.com/design/spec/components/dialogs.html)
-
-`<paper-dialog>` is a dialog with Material Design styling and optional animations when it is
-opened or closed. It provides styles for a header, content area, and an action area for buttons.
-You can use the `<paper-dialog-scrollable>` element (in its own repository) if you need a scrolling
-content area. See `Polymer.PaperDialogBehavior` for specifics.
-
-For example, the following code implements a dialog with a header, scrolling content area and
-buttons.
-
-    <paper-dialog>
-      <h2>Header</h2>
-      <paper-dialog-scrollable>
-        Lorem ipsum...
-      </paper-dialog-scrollable>
-      <div class="buttons">
-        <paper-button dialog-dismiss>Cancel</paper-button>
-        <paper-button dialog-confirm>Accept</paper-button>
-      </div>
-    </paper-dialog>
-
-### Styling
-
-See the docs for `Polymer.PaperDialogBehavior` for the custom properties available for styling
-this element.
-
-### Animations
-
-Set the `entry-animation` and/or `exit-animation` attributes to add an animation when the dialog
-is opened or closed. See the documentation in
-[PolymerElements/neon-animation](https://github.com/PolymerElements/neon-animation) for more info.
-
-For example:
-
-    <link rel="import" href="components/neon-animation/animations/scale-up-animation.html">
-    <link rel="import" href="components/neon-animation/animations/fade-out-animation.html">
-
-    <paper-dialog entry-animation="scale-up-animation"
-                  exit-animation="fade-out-animation">
-      <h2>Header</h2>
-      <div>Dialog body</div>
-    </paper-dialog>
-
-### Accessibility
-
-See the docs for `Polymer.PaperDialogBehavior` for accessibility features implemented by this
-element.
-
-@group Paper Elements
-@element paper-dialog
-@hero hero.svg
-@demo demo/index.html
--->
-
-<dom-module id="paper-dialog">
-  <template>
-    <style include="paper-dialog-shared-styles"></style>
-    <content></content>
-  </template>
-</dom-module>
-
-<script>
-
-(function() {
-
-  Polymer({
-
-    is: 'paper-dialog',
-
-    behaviors: [
-      Polymer.PaperDialogBehavior,
-      Polymer.NeonAnimationRunnerBehavior
-    ],
-
-    listeners: {
-      'neon-animation-finish': '_onNeonAnimationFinish'
-    },
-
-    _renderOpened: function() {
-      if (this.withBackdrop) {
-        this.backdropElement.open();
-      }
-      this.playAnimation('entry');
-    },
-
-    _renderClosed: function() {
-      if (this.withBackdrop) {
-        this.backdropElement.close();
-      }
-      this.playAnimation('exit');
-    },
-
-    _onNeonAnimationFinish: function() {
-      if (this.opened) {
-        this._finishRenderOpened();
-      } else {
-        this._finishRenderClosed();
-      }
-    }
-
-  });
-
-})();
-
-</script>
-
-
-
-
-
-
-
-<script>
   (function() {
     'use strict';
 
@@ -12793,6 +10340,331 @@ element.
 
 
 
+<!--
+`iron-meta` is a generic element you can use for sharing information across the DOM tree.
+It uses [monostate pattern](http://c2.com/cgi/wiki?MonostatePattern) such that any
+instance of iron-meta has access to the shared
+information. You can use `iron-meta` to share whatever you want (or create an extension
+[like x-meta] for enhancements).
+
+The `iron-meta` instances containing your actual data can be loaded in an import,
+or constructed in any way you see fit. The only requirement is that you create them
+before you try to access them.
+
+Examples:
+
+If I create an instance like this:
+
+    <iron-meta key="info" value="foo/bar"></iron-meta>
+
+Note that value="foo/bar" is the metadata I've defined. I could define more
+attributes or use child nodes to define additional metadata.
+
+Now I can access that element (and it's metadata) from any iron-meta instance
+via the byKey method, e.g.
+
+    meta.byKey('info').getAttribute('value');
+
+Pure imperative form would be like:
+
+    document.createElement('iron-meta').byKey('info').getAttribute('value');
+
+Or, in a Polymer element, you can include a meta in your template:
+
+    <iron-meta id="meta"></iron-meta>
+    ...
+    this.$.meta.byKey('info').getAttribute('value');
+
+@group Iron Elements
+@demo demo/index.html
+@hero hero.svg
+@element iron-meta
+-->
+
+<script>
+
+  (function() {
+
+    // monostate data
+    var metaDatas = {};
+    var metaArrays = {};
+    var singleton = null;
+
+    Polymer.IronMeta = Polymer({
+
+      is: 'iron-meta',
+
+      properties: {
+
+        /**
+         * The type of meta-data.  All meta-data of the same type is stored
+         * together.
+         */
+        type: {
+          type: String,
+          value: 'default',
+          observer: '_typeChanged'
+        },
+
+        /**
+         * The key used to store `value` under the `type` namespace.
+         */
+        key: {
+          type: String,
+          observer: '_keyChanged'
+        },
+
+        /**
+         * The meta-data to store or retrieve.
+         */
+        value: {
+          type: Object,
+          notify: true,
+          observer: '_valueChanged'
+        },
+
+        /**
+         * If true, `value` is set to the iron-meta instance itself.
+         */
+         self: {
+          type: Boolean,
+          observer: '_selfChanged'
+        },
+
+        /**
+         * Array of all meta-data values for the given type.
+         */
+        list: {
+          type: Array,
+          notify: true
+        }
+
+      },
+
+      hostAttributes: {
+        hidden: true
+      },
+
+      /**
+       * Only runs if someone invokes the factory/constructor directly
+       * e.g. `new Polymer.IronMeta()`
+       *
+       * @param {{type: (string|undefined), key: (string|undefined), value}=} config
+       */
+      factoryImpl: function(config) {
+        if (config) {
+          for (var n in config) {
+            switch(n) {
+              case 'type':
+              case 'key':
+              case 'value':
+                this[n] = config[n];
+                break;
+            }
+          }
+        }
+      },
+
+      created: function() {
+        // TODO(sjmiles): good for debugging?
+        this._metaDatas = metaDatas;
+        this._metaArrays = metaArrays;
+      },
+
+      _keyChanged: function(key, old) {
+        this._resetRegistration(old);
+      },
+
+      _valueChanged: function(value) {
+        this._resetRegistration(this.key);
+      },
+
+      _selfChanged: function(self) {
+        if (self) {
+          this.value = this;
+        }
+      },
+
+      _typeChanged: function(type) {
+        this._unregisterKey(this.key);
+        if (!metaDatas[type]) {
+          metaDatas[type] = {};
+        }
+        this._metaData = metaDatas[type];
+        if (!metaArrays[type]) {
+          metaArrays[type] = [];
+        }
+        this.list = metaArrays[type];
+        this._registerKeyValue(this.key, this.value);
+      },
+
+      /**
+       * Retrieves meta data value by key.
+       *
+       * @method byKey
+       * @param {string} key The key of the meta-data to be returned.
+       * @return {*}
+       */
+      byKey: function(key) {
+        return this._metaData && this._metaData[key];
+      },
+
+      _resetRegistration: function(oldKey) {
+        this._unregisterKey(oldKey);
+        this._registerKeyValue(this.key, this.value);
+      },
+
+      _unregisterKey: function(key) {
+        this._unregister(key, this._metaData, this.list);
+      },
+
+      _registerKeyValue: function(key, value) {
+        this._register(key, value, this._metaData, this.list);
+      },
+
+      _register: function(key, value, data, list) {
+        if (key && data && value !== undefined) {
+          data[key] = value;
+          list.push(value);
+        }
+      },
+
+      _unregister: function(key, data, list) {
+        if (key && data) {
+          if (key in data) {
+            var value = data[key];
+            delete data[key];
+            this.arrayDelete(list, value);
+          }
+        }
+      }
+
+    });
+
+    Polymer.IronMeta.getIronMeta = function getIronMeta() {
+       if (singleton === null) {
+         singleton = new Polymer.IronMeta();
+       }
+       return singleton;
+     };
+
+    /**
+    `iron-meta-query` can be used to access infomation stored in `iron-meta`.
+
+    Examples:
+
+    If I create an instance like this:
+
+        <iron-meta key="info" value="foo/bar"></iron-meta>
+
+    Note that value="foo/bar" is the metadata I've defined. I could define more
+    attributes or use child nodes to define additional metadata.
+
+    Now I can access that element (and it's metadata) from any `iron-meta-query` instance:
+
+         var value = new Polymer.IronMetaQuery({key: 'info'}).value;
+
+    @group Polymer Iron Elements
+    @element iron-meta-query
+    */
+    Polymer.IronMetaQuery = Polymer({
+
+      is: 'iron-meta-query',
+
+      properties: {
+
+        /**
+         * The type of meta-data.  All meta-data of the same type is stored
+         * together.
+         */
+        type: {
+          type: String,
+          value: 'default',
+          observer: '_typeChanged'
+        },
+
+        /**
+         * Specifies a key to use for retrieving `value` from the `type`
+         * namespace.
+         */
+        key: {
+          type: String,
+          observer: '_keyChanged'
+        },
+
+        /**
+         * The meta-data to store or retrieve.
+         */
+        value: {
+          type: Object,
+          notify: true,
+          readOnly: true
+        },
+
+        /**
+         * Array of all meta-data values for the given type.
+         */
+        list: {
+          type: Array,
+          notify: true
+        }
+
+      },
+
+      /**
+       * Actually a factory method, not a true constructor. Only runs if
+       * someone invokes it directly (via `new Polymer.IronMeta()`);
+       *
+       * @param {{type: (string|undefined), key: (string|undefined)}=} config
+       */
+      factoryImpl: function(config) {
+        if (config) {
+          for (var n in config) {
+            switch(n) {
+              case 'type':
+              case 'key':
+                this[n] = config[n];
+                break;
+            }
+          }
+        }
+      },
+
+      created: function() {
+        // TODO(sjmiles): good for debugging?
+        this._metaDatas = metaDatas;
+        this._metaArrays = metaArrays;
+      },
+
+      _keyChanged: function(key) {
+        this._setValue(this._metaData && this._metaData[key]);
+      },
+
+      _typeChanged: function(type) {
+        this._metaData = metaDatas[type];
+        this.list = metaArrays[type];
+        if (this.key) {
+          this._keyChanged(this.key);
+        }
+      },
+
+      /**
+       * Retrieves meta data value by key.
+       * @param {string} key The key of the meta-data to be returned.
+       * @return {*}
+       */
+      byKey: function(key) {
+        return this._metaData && this._metaData[key];
+      }
+
+    });
+
+  })();
+</script>
+
+
+
+
 
 <script>
 
@@ -12916,6 +10788,67 @@ element.
 
 </script>
 
+
+
+
+
+<!-- Taken from https://www.google.com/design/spec/style/color.html#color-ui-color-application -->
+
+<style is="custom-style">
+
+  :root {
+    /*
+     * You can use these generic variables in your elements for easy theming.
+     * For example, if all your elements use `--primary-text-color` as its main
+     * color, then switching from a light to a dark theme is just a matter of
+     * changing the value of `--primary-text-color` in your application.
+     */
+    --primary-text-color: var(--light-theme-text-color);
+    --primary-background-color: var(--light-theme-background-color);
+    --secondary-text-color: var(--light-theme-secondary-color);
+    --disabled-text-color: var(--light-theme-disabled-color);
+    --divider-color: var(--light-theme-divider-color);
+
+    /*
+     * Primary and accent colors. Also see color.html for more colors.
+     */
+    --primary-color: #3f51b5;  /* --paper-indigo-500 */
+    --light-primary-color: #c5cae9;  /* --paper-indigo-100 */
+    --dark-primary-color: #303f9f;  /* --paper-indigo-700 */
+
+    --accent-color: #ff4081;  /* --paper-pink-a200 */
+    --light-accent-color: #ff80ab;  /* --paper-pink-a100 */
+    --dark-accent-color: #f50057;  /* --paper-pink-a400 */
+
+    /*
+     * Material Design Light background theme
+     */
+    --light-theme-background-color: #ffffff;
+    --light-theme-base-color: #000000;
+    --light-theme-text-color: #212121;
+    --light-theme-secondary-color: #737373;  /* for secondary text and icons */
+    --light-theme-disabled-color: #9b9b9b;  /* disabled/hint text */
+    --light-theme-divider-color: #dbdbdb;
+
+    /*
+     * Material Design Dark background theme
+     */
+    --dark-theme-background-color: #212121;
+    --dark-theme-base-color: #ffffff;
+    --dark-theme-text-color: #ffffff;
+    --dark-theme-secondary-color: #bcbcbc;  /* for secondary text and icons */
+    --dark-theme-disabled-color: #646464;  /* disabled/hint text */
+    --dark-theme-divider-color: #3c3c3c;
+
+    /*
+     * Deprecated values because of their confusing names.
+     */
+    --text-primary-color: var(--dark-theme-text-color);
+    --default-primary-color: var(--primary-color);
+
+  }
+
+</style>
 
 
 
@@ -13696,6 +11629,172 @@ is separate from validation, and `allowed-pattern` does not affect how the input
   };
 
 </script>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic,500,500italic,700,700italic">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,700">
+
+
+
+
+
+<style is="custom-style">
+
+  :root {
+
+    /* Shared Styles */
+    --paper-font-common-base: {
+      font-family: 'Roboto', 'Noto', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    };
+
+    --paper-font-common-code: {
+      font-family: 'Roboto Mono', 'Consolas', 'Menlo', monospace;
+      -webkit-font-smoothing: antialiased;
+    };
+
+    --paper-font-common-expensive-kerning: {
+      text-rendering: optimizeLegibility;
+    };
+
+    --paper-font-common-nowrap: {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    };
+
+    /* Material Font Styles */
+
+    --paper-font-display4: {
+      @apply(--paper-font-common-base);
+      @apply(--paper-font-common-nowrap);
+
+      font-size: 112px;
+      font-weight: 300;
+      letter-spacing: -.044em;
+      line-height: 120px;
+    };
+
+    --paper-font-display3: {
+      @apply(--paper-font-common-base);
+      @apply(--paper-font-common-nowrap);
+
+      font-size: 56px;
+      font-weight: 400;
+      letter-spacing: -.026em;
+      line-height: 60px;
+    };
+
+    --paper-font-display2: {
+      @apply(--paper-font-common-base);
+
+      font-size: 45px;
+      font-weight: 400;
+      letter-spacing: -.018em;
+      line-height: 48px;
+    };
+
+    --paper-font-display1: {
+      @apply(--paper-font-common-base);
+
+      font-size: 34px;
+      font-weight: 400;
+      letter-spacing: -.01em;
+      line-height: 40px;
+    };
+
+    --paper-font-headline: {
+      @apply(--paper-font-common-base);
+
+      font-size: 24px;
+      font-weight: 400;
+      letter-spacing: -.012em;
+      line-height: 32px;
+    };
+
+    --paper-font-title: {
+      @apply(--paper-font-common-base);
+      @apply(--paper-font-common-nowrap);
+
+      font-size: 20px;
+      font-weight: 500;
+      line-height: 28px;
+    };
+
+    --paper-font-subhead: {
+      @apply(--paper-font-common-base);
+
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 24px;
+    };
+
+    --paper-font-body2: {
+      @apply(--paper-font-common-base);
+
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 24px;
+    };
+
+    --paper-font-body1: {
+      @apply(--paper-font-common-base);
+
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 20px;
+    };
+
+    --paper-font-caption: {
+      @apply(--paper-font-common-base);
+      @apply(--paper-font-common-nowrap);
+
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 0.011em;
+      line-height: 20px;
+    };
+
+    --paper-font-menu: {
+      @apply(--paper-font-common-base);
+      @apply(--paper-font-common-nowrap);
+
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 24px;
+    };
+
+    --paper-font-button: {
+      @apply(--paper-font-common-base);
+      @apply(--paper-font-common-nowrap);
+
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.018em;
+      line-height: 24px;
+      text-transform: uppercase;
+    };
+
+    --paper-font-code2: {
+      @apply(--paper-font-common-code);
+
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 20px;
+    };
+
+    --paper-font-code1: {
+      @apply(--paper-font-common-code);
+
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 20px;
+    };
+
+  }
+
+</style>
+
 
 
 
@@ -14898,6 +12997,1497 @@ style this element.
 
 
 
+
+
+
+
+
+
+<script>
+
+/**
+Polymer.IronFitBehavior fits an element in another element using `max-height` and `max-width`, and
+optionally centers it in the window or another element.
+
+The element will only be sized and/or positioned if it has not already been sized and/or positioned
+by CSS.
+
+CSS properties               | Action
+-----------------------------|-------------------------------------------
+`position` set               | Element is not centered horizontally or vertically
+`top` or `bottom` set        | Element is not vertically centered
+`left` or `right` set        | Element is not horizontally centered
+`max-height` or `height` set | Element respects `max-height` or `height`
+`max-width` or `width` set   | Element respects `max-width` or `width`
+
+@demo demo/index.html
+@polymerBehavior
+*/
+
+  Polymer.IronFitBehavior = {
+
+    properties: {
+
+      /**
+       * The element that will receive a `max-height`/`width`. By default it is the same as `this`,
+       * but it can be set to a child element. This is useful, for example, for implementing a
+       * scrolling region inside the element.
+       * @type {!Element}
+       */
+      sizingTarget: {
+        type: Object,
+        value: function() {
+          return this;
+        }
+      },
+
+      /**
+       * The element to fit `this` into.
+       */
+      fitInto: {
+        type: Object,
+        value: window
+      },
+
+      /**
+       * Set to true to auto-fit on attach.
+       */
+      autoFitOnAttach: {
+        type: Boolean,
+        value: false
+      },
+
+      /** @type {?Object} */
+      _fitInfo: {
+        type: Object
+      }
+
+    },
+
+    get _fitWidth() {
+      var fitWidth;
+      if (this.fitInto === window) {
+        fitWidth = this.fitInto.innerWidth;
+      } else {
+        fitWidth = this.fitInto.getBoundingClientRect().width;
+      }
+      return fitWidth;
+    },
+
+    get _fitHeight() {
+      var fitHeight;
+      if (this.fitInto === window) {
+        fitHeight = this.fitInto.innerHeight;
+      } else {
+        fitHeight = this.fitInto.getBoundingClientRect().height;
+      }
+      return fitHeight;
+    },
+
+    get _fitLeft() {
+      var fitLeft;
+      if (this.fitInto === window) {
+        fitLeft = 0;
+      } else {
+        fitLeft = this.fitInto.getBoundingClientRect().left;
+      }
+      return fitLeft;
+    },
+
+    get _fitTop() {
+      var fitTop;
+      if (this.fitInto === window) {
+        fitTop = 0;
+      } else {
+        fitTop = this.fitInto.getBoundingClientRect().top;
+      }
+      return fitTop;
+    },
+
+    attached: function() {
+      if (this.autoFitOnAttach) {
+        if (window.getComputedStyle(this).display === 'none') {
+          setTimeout(function() {
+            this.fit();
+          }.bind(this));
+        } else {
+          this.fit();
+        }
+      }
+    },
+
+    /**
+     * Fits and optionally centers the element into the window, or `fitInfo` if specified.
+     */
+    fit: function() {
+      this._discoverInfo();
+      this.constrain();
+      this.center();
+    },
+
+    /**
+     * Memoize information needed to position and size the target element.
+     */
+    _discoverInfo: function() {
+      if (this._fitInfo) {
+        return;
+      }
+      var target = window.getComputedStyle(this);
+      var sizer = window.getComputedStyle(this.sizingTarget);
+      this._fitInfo = {
+        inlineStyle: {
+          top: this.style.top || '',
+          left: this.style.left || ''
+        },
+        positionedBy: {
+          vertically: target.top !== 'auto' ? 'top' : (target.bottom !== 'auto' ?
+            'bottom' : null),
+          horizontally: target.left !== 'auto' ? 'left' : (target.right !== 'auto' ?
+            'right' : null),
+          css: target.position
+        },
+        sizedBy: {
+          height: sizer.maxHeight !== 'none',
+          width: sizer.maxWidth !== 'none'
+        },
+        margin: {
+          top: parseInt(target.marginTop, 10) || 0,
+          right: parseInt(target.marginRight, 10) || 0,
+          bottom: parseInt(target.marginBottom, 10) || 0,
+          left: parseInt(target.marginLeft, 10) || 0
+        }
+      };
+    },
+
+    /**
+     * Resets the target element's position and size constraints, and clear
+     * the memoized data.
+     */
+    resetFit: function() {
+      if (!this._fitInfo || !this._fitInfo.sizedBy.height) {
+        this.sizingTarget.style.maxHeight = '';
+        this.style.top = this._fitInfo ? this._fitInfo.inlineStyle.top : '';
+      }
+      if (!this._fitInfo || !this._fitInfo.sizedBy.width) {
+        this.sizingTarget.style.maxWidth = '';
+        this.style.left = this._fitInfo ? this._fitInfo.inlineStyle.left : '';
+      }
+      if (this._fitInfo) {
+        this.style.position = this._fitInfo.positionedBy.css;
+      }
+      this._fitInfo = null;
+    },
+
+    /**
+     * Equivalent to calling `resetFit()` and `fit()`. Useful to call this after the element,
+     * the window, or the `fitInfo` element has been resized.
+     */
+    refit: function() {
+      this.resetFit();
+      this.fit();
+    },
+
+    /**
+     * Constrains the size of the element to the window or `fitInfo` by setting `max-height`
+     * and/or `max-width`.
+     */
+    constrain: function() {
+      var info = this._fitInfo;
+      // position at (0px, 0px) if not already positioned, so we can measure the natural size.
+      if (!this._fitInfo.positionedBy.vertically) {
+        this.style.top = '0px';
+      }
+      if (!this._fitInfo.positionedBy.horizontally) {
+        this.style.left = '0px';
+      }
+      if (!this._fitInfo.positionedBy.vertically || !this._fitInfo.positionedBy.horizontally) {
+        // need position:fixed to properly size the element
+        this.style.position = 'fixed';
+      }
+      // need border-box for margin/padding
+      this.sizingTarget.style.boxSizing = 'border-box';
+      // constrain the width and height if not already set
+      var rect = this.getBoundingClientRect();
+      if (!info.sizedBy.height) {
+        this._sizeDimension(rect, info.positionedBy.vertically, 'top', 'bottom', 'Height');
+      }
+      if (!info.sizedBy.width) {
+        this._sizeDimension(rect, info.positionedBy.horizontally, 'left', 'right', 'Width');
+      }
+    },
+
+    _sizeDimension: function(rect, positionedBy, start, end, extent) {
+      var info = this._fitInfo;
+      var max = extent === 'Width' ? this._fitWidth : this._fitHeight;
+      var flip = (positionedBy === end);
+      var offset = flip ? max - rect[end] : rect[start];
+      var margin = info.margin[flip ? start : end];
+      var offsetExtent = 'offset' + extent;
+      var sizingOffset = this[offsetExtent] - this.sizingTarget[offsetExtent];
+      this.sizingTarget.style['max' + extent] = (max - margin - offset - sizingOffset) + 'px';
+    },
+
+    /**
+     * Centers horizontally and vertically if not already positioned. This also sets
+     * `position:fixed`.
+     */
+    center: function() {
+      if (!this._fitInfo.positionedBy.vertically || !this._fitInfo.positionedBy.horizontally) {
+        // need position:fixed to center
+        this.style.position = 'fixed';
+      }
+      if (!this._fitInfo.positionedBy.vertically) {
+        var top = (this._fitHeight - this.offsetHeight) / 2 + this._fitTop;
+        top -= this._fitInfo.margin.top;
+        this.style.top = top + 'px';
+      }
+      if (!this._fitInfo.positionedBy.horizontally) {
+        var left = (this._fitWidth - this.offsetWidth) / 2 + this._fitLeft;
+        left -= this._fitInfo.margin.left;
+        this.style.left = left + 'px';
+      }
+    }
+
+  };
+
+</script>
+
+
+
+
+<script>
+  /**
+   * `IronResizableBehavior` is a behavior that can be used in Polymer elements to
+   * coordinate the flow of resize events between "resizers" (elements that control the
+   * size or hidden state of their children) and "resizables" (elements that need to be
+   * notified when they are resized or un-hidden by their parents in order to take
+   * action on their new measurements).
+   * Elements that perform measurement should add the `IronResizableBehavior` behavior to
+   * their element definition and listen for the `iron-resize` event on themselves.
+   * This event will be fired when they become showing after having been hidden,
+   * when they are resized explicitly by another resizable, or when the window has been
+   * resized.
+   * Note, the `iron-resize` event is non-bubbling.
+   *
+   * @polymerBehavior Polymer.IronResizableBehavior
+   * @demo demo/index.html
+   **/
+  Polymer.IronResizableBehavior = {
+    properties: {
+      /**
+       * The closest ancestor element that implements `IronResizableBehavior`.
+       */
+      _parentResizable: {
+        type: Object,
+        observer: '_parentResizableChanged'
+      },
+
+      /**
+       * True if this element is currently notifying its descedant elements of
+       * resize.
+       */
+      _notifyingDescendant: {
+        type: Boolean,
+        value: false
+      }
+    },
+
+    listeners: {
+      'iron-request-resize-notifications': '_onIronRequestResizeNotifications'
+    },
+
+    created: function() {
+      // We don't really need property effects on these, and also we want them
+      // to be created before the `_parentResizable` observer fires:
+      this._interestedResizables = [];
+      this._boundNotifyResize = this.notifyResize.bind(this);
+    },
+
+    attached: function() {
+      this.fire('iron-request-resize-notifications', null, {
+        node: this,
+        bubbles: true,
+        cancelable: true
+      });
+
+      if (!this._parentResizable) {
+        window.addEventListener('resize', this._boundNotifyResize);
+        this.notifyResize();
+      }
+    },
+
+    detached: function() {
+      if (this._parentResizable) {
+        this._parentResizable.stopResizeNotificationsFor(this);
+      } else {
+        window.removeEventListener('resize', this._boundNotifyResize);
+      }
+
+      this._parentResizable = null;
+    },
+
+    /**
+     * Can be called to manually notify a resizable and its descendant
+     * resizables of a resize change.
+     */
+    notifyResize: function() {
+      if (!this.isAttached) {
+        return;
+      }
+
+      this._interestedResizables.forEach(function(resizable) {
+        if (this.resizerShouldNotify(resizable)) {
+          this._notifyDescendant(resizable);
+        }
+      }, this);
+
+      this._fireResize();
+    },
+
+    /**
+     * Used to assign the closest resizable ancestor to this resizable
+     * if the ancestor detects a request for notifications.
+     */
+    assignParentResizable: function(parentResizable) {
+      this._parentResizable = parentResizable;
+    },
+
+    /**
+     * Used to remove a resizable descendant from the list of descendants
+     * that should be notified of a resize change.
+     */
+    stopResizeNotificationsFor: function(target) {
+      var index = this._interestedResizables.indexOf(target);
+
+      if (index > -1) {
+        this._interestedResizables.splice(index, 1);
+        this.unlisten(target, 'iron-resize', '_onDescendantIronResize');
+      }
+    },
+
+    /**
+     * This method can be overridden to filter nested elements that should or
+     * should not be notified by the current element. Return true if an element
+     * should be notified, or false if it should not be notified.
+     *
+     * @param {HTMLElement} element A candidate descendant element that
+     * implements `IronResizableBehavior`.
+     * @return {boolean} True if the `element` should be notified of resize.
+     */
+    resizerShouldNotify: function(element) { return true; },
+
+    _onDescendantIronResize: function(event) {
+      if (this._notifyingDescendant) {
+        event.stopPropagation();
+        return;
+      }
+
+      // NOTE(cdata): In ShadowDOM, event retargetting makes echoing of the
+      // otherwise non-bubbling event "just work." We do it manually here for
+      // the case where Polymer is not using shadow roots for whatever reason:
+      if (!Polymer.Settings.useShadow) {
+        this._fireResize();
+      }
+    },
+
+    _fireResize: function() {
+      this.fire('iron-resize', null, {
+        node: this,
+        bubbles: false
+      });
+    },
+
+    _onIronRequestResizeNotifications: function(event) {
+      var target = event.path ? event.path[0] : event.target;
+
+      if (target === this) {
+        return;
+      }
+
+      if (this._interestedResizables.indexOf(target) === -1) {
+        this._interestedResizables.push(target);
+        this.listen(target, 'iron-resize', '_onDescendantIronResize');
+      }
+
+      target.assignParentResizable(this);
+      this._notifyDescendant(target);
+
+      event.stopPropagation();
+    },
+
+    _parentResizableChanged: function(parentResizable) {
+      if (parentResizable) {
+        window.removeEventListener('resize', this._boundNotifyResize);
+      }
+    },
+
+    _notifyDescendant: function(descendant) {
+      // NOTE(cdata): In IE10, attached is fired on children first, so it's
+      // important not to notify them if the parent is not attached yet (or
+      // else they will get redundantly notified when the parent attaches).
+      if (!this.isAttached) {
+        return;
+      }
+
+      this._notifyingDescendant = true;
+      descendant.notifyResize();
+      this._notifyingDescendant = false;
+    }
+  };
+</script>
+
+
+
+
+
+
+<script>
+
+  Polymer.IronOverlayManager = {
+
+    _overlays: [],
+
+    // iframes have a default z-index of 100, so this default should be at least
+    // that.
+    _minimumZ: 101,
+
+    _backdrops: [],
+
+    _applyOverlayZ: function(overlay, aboveZ) {
+      this._setZ(overlay, aboveZ + 2);
+    },
+
+    _setZ: function(element, z) {
+      element.style.zIndex = z;
+    },
+
+    // track overlays for z-index and focus managemant
+    addOverlay: function(overlay) {
+      var minimumZ = Math.max(this.currentOverlayZ(), this._minimumZ);
+      this._overlays.push(overlay);
+      var newZ = this.currentOverlayZ();
+      if (newZ <= minimumZ) {
+        this._applyOverlayZ(overlay, minimumZ);
+      }
+    },
+
+    removeOverlay: function(overlay) {
+      var i = this._overlays.indexOf(overlay);
+      if (i >= 0) {
+        this._overlays.splice(i, 1);
+        this._setZ(overlay, '');
+      }
+    },
+
+    currentOverlay: function() {
+      var i = this._overlays.length - 1;
+      while (this._overlays[i] && !this._overlays[i].opened) {
+        --i;
+      }
+      return this._overlays[i];
+    },
+
+    currentOverlayZ: function() {
+      var z = this._minimumZ;
+      var current = this.currentOverlay();
+      if (current) {
+        var z1 = window.getComputedStyle(current).zIndex;
+        if (!isNaN(z1)) {
+          z = Number(z1);
+        }
+      }
+      return z;
+    },
+
+    /**
+     * Ensures that the minimum z-index of new overlays is at least `minimumZ`.
+     * This does not effect the z-index of any existing overlays.
+     *
+     * @param {number} minimumZ
+     */
+    ensureMinimumZ: function(minimumZ) {
+      this._minimumZ = Math.max(this._minimumZ, minimumZ);
+    },
+
+    focusOverlay: function() {
+      var current = this.currentOverlay();
+      // We have to be careful to focus the next overlay _after_ any current
+      // transitions are complete (due to the state being toggled prior to the
+      // transition). Otherwise, we risk infinite recursion when a transitioning
+      // (closed) overlay becomes the current overlay.
+      //
+      // NOTE: We make the assumption that any overlay that completes a transition
+      // will call into focusOverlay to kick the process back off. Currently:
+      // transitionend -> _applyFocus -> focusOverlay.
+      if (current && !current.transitioning) {
+        current._applyFocus();
+      }
+    },
+
+    trackBackdrop: function(element) {
+      // backdrops contains the overlays with a backdrop that are currently
+      // visible
+      if (element.opened) {
+        this._backdrops.push(element);
+      } else {
+        var index = this._backdrops.indexOf(element);
+        if (index >= 0) {
+          this._backdrops.splice(index, 1);
+        }
+      }
+    },
+
+    getBackdrops: function() {
+      return this._backdrops;
+    }
+
+  };
+
+</script>
+
+
+<!--
+`iron-overlay-backdrop` is a backdrop used by `Polymer.IronOverlayBehavior`. It should be a
+singleton.
+
+### Styling
+
+The following custom properties and mixins are available for styling.
+
+Custom property | Description | Default
+-------------------------------------------|------------------------|---------
+`--iron-overlay-backdrop-background-color` | Backdrop background color                                     | #000
+`--iron-overlay-backdrop-opacity`          | Backdrop opacity                                              | 0.6
+`--iron-overlay-backdrop`                  | Mixin applied to `iron-overlay-backdrop`.                      | {}
+`--iron-overlay-backdrop-opened`           | Mixin applied to `iron-overlay-backdrop` when it is displayed | {}
+-->
+
+<dom-module id="iron-overlay-backdrop">
+
+  <style>
+
+    :host {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: var(--iron-overlay-backdrop-background-color, #000);
+      opacity: 0;
+      transition: opacity 0.2s;
+
+      @apply(--iron-overlay-backdrop);
+    }
+
+    :host([opened]) {
+      opacity: var(--iron-overlay-backdrop-opacity, 0.6);
+
+      @apply(--iron-overlay-backdrop-opened);
+    }
+
+  </style>
+
+  <template>
+    <content></content>
+  </template>
+
+</dom-module>
+
+<script>
+
+(function() {
+
+  Polymer({
+
+    is: 'iron-overlay-backdrop',
+
+    properties: {
+
+      /**
+       * Returns true if the backdrop is opened.
+       */
+      opened: {
+        readOnly: true,
+        reflectToAttribute: true,
+        type: Boolean,
+        value: false
+      },
+
+      _manager: {
+        type: Object,
+        value: Polymer.IronOverlayManager
+      }
+
+    },
+
+    /**
+     * Appends the backdrop to document body and sets its `z-index` to be below the latest overlay.
+     */
+    prepare: function() {
+      if (!this.parentNode) {
+        Polymer.dom(document.body).appendChild(this);
+        this.style.zIndex = this._manager.currentOverlayZ() - 1;
+      }
+    },
+
+    /**
+     * Shows the backdrop if needed.
+     */
+    open: function() {
+      // only need to make the backdrop visible if this is called by the first overlay with a backdrop
+      if (this._manager.getBackdrops().length < 2) {
+        this._setOpened(true);
+      }
+    },
+
+    /**
+     * Hides the backdrop if needed.
+     */
+    close: function() {
+      // only need to make the backdrop invisible if this is called by the last overlay with a backdrop
+      if (this._manager.getBackdrops().length < 2) {
+        this._setOpened(false);
+      }
+    },
+
+    /**
+     * Removes the backdrop from document body if needed.
+     */
+    complete: function() {
+      // only remove the backdrop if there are no more overlays with backdrops
+      if (this._manager.getBackdrops().length === 0 && this.parentNode) {
+        Polymer.dom(this.parentNode).removeChild(this);
+      }
+    }
+
+  });
+
+})();
+
+</script>
+
+
+
+
+
+
+
+
+<script>
+
+/**
+Use `Polymer.IronOverlayBehavior` to implement an element that can be hidden or shown, and displays
+on top of other content. It includes an optional backdrop, and can be used to implement a variety
+of UI controls including dialogs and drop downs. Multiple overlays may be displayed at once.
+
+### Closing and canceling
+
+A dialog may be hidden by closing or canceling. The difference between close and cancel is user
+intent. Closing generally implies that the user acknowledged the content on the overlay. By default,
+it will cancel whenever the user taps outside it or presses the escape key. This behavior is
+configurable with the `no-cancel-on-esc-key` and the `no-cancel-on-outside-click` properties.
+`close()` should be called explicitly by the implementer when the user interacts with a control
+in the overlay element. When the dialog is canceled, the overlay fires an 'iron-overlay-canceled'
+event. Call `preventDefault` on this event to prevent the overlay from closing.
+
+### Positioning
+
+By default the element is sized and positioned to fit and centered inside the window. You can
+position and size it manually using CSS. See `Polymer.IronFitBehavior`.
+
+### Backdrop
+
+Set the `with-backdrop` attribute to display a backdrop behind the overlay. The backdrop is
+appended to `<body>` and is of type `<iron-overlay-backdrop>`. See its doc page for styling
+options.
+
+### Limitations
+
+The element is styled to appear on top of other content by setting its `z-index` property. You
+must ensure no element has a stacking context with a higher `z-index` than its parent stacking
+context. You should place this element as a child of `<body>` whenever possible.
+
+@demo demo/index.html
+@polymerBehavior Polymer.IronOverlayBehavior
+*/
+
+  Polymer.IronOverlayBehaviorImpl = {
+
+    properties: {
+
+      /**
+       * True if the overlay is currently displayed.
+       */
+      opened: {
+        observer: '_openedChanged',
+        type: Boolean,
+        value: false,
+        notify: true
+      },
+
+      /**
+       * True if the overlay was canceled when it was last closed.
+       */
+      canceled: {
+        observer: '_canceledChanged',
+        readOnly: true,
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * Set to true to display a backdrop behind the overlay.
+       */
+      withBackdrop: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * Set to true to disable auto-focusing the overlay or child nodes with
+       * the `autofocus` attribute` when the overlay is opened.
+       */
+      noAutoFocus: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * Set to true to disable canceling the overlay with the ESC key.
+       */
+      noCancelOnEscKey: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * Set to true to disable canceling the overlay by clicking outside it.
+       */
+      noCancelOnOutsideClick: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * Returns the reason this dialog was last closed.
+       */
+      closingReason: {
+        // was a getter before, but needs to be a property so other
+        // behaviors can override this.
+        type: Object
+      },
+
+      _manager: {
+        type: Object,
+        value: Polymer.IronOverlayManager
+      },
+
+      _boundOnCaptureClick: {
+        type: Function,
+        value: function() {
+          return this._onCaptureClick.bind(this);
+        }
+      },
+
+      _boundOnCaptureKeydown: {
+        type: Function,
+        value: function() {
+          return this._onCaptureKeydown.bind(this);
+        }
+      }
+
+    },
+
+    listeners: {
+      'iron-resize': '_onIronResize'
+    },
+
+    /**
+     * The backdrop element.
+     * @type Node
+     */
+    get backdropElement() {
+      return this._backdrop;
+    },
+
+    get _focusNode() {
+      return Polymer.dom(this).querySelector('[autofocus]') || this;
+    },
+
+    registered: function() {
+      this._backdrop = document.createElement('iron-overlay-backdrop');
+    },
+
+    ready: function() {
+      this._ensureSetup();
+    },
+
+    attached: function() {
+      // Call _openedChanged here so that position can be computed correctly.
+      if (this._callOpenedWhenReady) {
+        this._openedChanged();
+      }
+    },
+
+    detached: function() {
+      this.opened = false;
+      this._completeBackdrop();
+      this._manager.removeOverlay(this);
+    },
+
+    /**
+     * Toggle the opened state of the overlay.
+     */
+    toggle: function() {
+      this.opened = !this.opened;
+    },
+
+    /**
+     * Open the overlay.
+     */
+    open: function() {
+      this.opened = true;
+      this.closingReason = {canceled: false};
+    },
+
+    /**
+     * Close the overlay.
+     */
+    close: function() {
+      this.opened = false;
+      this._setCanceled(false);
+    },
+
+    /**
+     * Cancels the overlay.
+     */
+    cancel: function() {
+      var cancelEvent = this.fire('iron-overlay-canceled', undefined, {cancelable: true});
+      if (cancelEvent.defaultPrevented) {
+        return;
+      }
+
+      this.opened = false;
+      this._setCanceled(true);
+    },
+
+    _ensureSetup: function() {
+      if (this._overlaySetup) {
+        return;
+      }
+      this._overlaySetup = true;
+      this.style.outline = 'none';
+      this.style.display = 'none';
+    },
+
+    _openedChanged: function() {
+      if (this.opened) {
+        this.removeAttribute('aria-hidden');
+      } else {
+        this.setAttribute('aria-hidden', 'true');
+      }
+
+      // wait to call after ready only if we're initially open
+      if (!this._overlaySetup) {
+        this._callOpenedWhenReady = this.opened;
+        return;
+      }
+      if (this._openChangedAsync) {
+        this.cancelAsync(this._openChangedAsync);
+      }
+
+      this._toggleListeners();
+
+      if (this.opened) {
+        this._prepareRenderOpened();
+      }
+
+      // async here to allow overlay layer to become visible.
+      this._openChangedAsync = this.async(function() {
+        // overlay becomes visible here
+        this.style.display = '';
+        // force layout to ensure transitions will go
+        /** @suppress {suspiciousCode} */ this.offsetWidth;
+        if (this.opened) {
+          this._renderOpened();
+        } else {
+          this._renderClosed();
+        }
+        this._openChangedAsync = null;
+      });
+
+    },
+
+    _canceledChanged: function() {
+      this.closingReason = this.closingReason || {};
+      this.closingReason.canceled = this.canceled;
+    },
+
+    _toggleListener: function(enable, node, event, boundListener, capture) {
+      if (enable) {
+        // enable document-wide tap recognizer
+        if (event === 'tap') {
+          Polymer.Gestures.add(document, 'tap', null);
+        }
+        node.addEventListener(event, boundListener, capture);
+      } else {
+        // disable document-wide tap recognizer
+        if (event === 'tap') {
+          Polymer.Gestures.remove(document, 'tap', null);
+        }
+        node.removeEventListener(event, boundListener, capture);
+      }
+    },
+
+    _toggleListeners: function() {
+      if (this._toggleListenersAsync) {
+        this.cancelAsync(this._toggleListenersAsync);
+      }
+      // async so we don't auto-close immediately via a click.
+      this._toggleListenersAsync = this.async(function() {
+        this._toggleListener(this.opened, document, 'tap', this._boundOnCaptureClick, true);
+        this._toggleListener(this.opened, document, 'keydown', this._boundOnCaptureKeydown, true);
+        this._toggleListenersAsync = null;
+      }, 1);
+    },
+
+    // tasks which must occur before opening; e.g. making the element visible
+    _prepareRenderOpened: function() {
+      this._manager.addOverlay(this);
+
+      if (this.withBackdrop) {
+        this.backdropElement.prepare();
+        this._manager.trackBackdrop(this);
+      }
+
+      this._preparePositioning();
+      this.fit();
+      this._finishPositioning();
+    },
+
+    // tasks which cause the overlay to actually open; typically play an
+    // animation
+    _renderOpened: function() {
+      if (this.withBackdrop) {
+        this.backdropElement.open();
+      }
+      this._finishRenderOpened();
+    },
+
+    _renderClosed: function() {
+      if (this.withBackdrop) {
+        this.backdropElement.close();
+      }
+      this._finishRenderClosed();
+    },
+
+    _onTransitionend: function(event) {
+      // make sure this is our transition event.
+      if (event && event.target !== this) {
+        return;
+      }
+      if (this.opened) {
+        this._finishRenderOpened();
+      } else {
+        this._finishRenderClosed();
+      }
+    },
+
+    _finishRenderOpened: function() {
+      // focus the child node with [autofocus]
+      if (!this.noAutoFocus) {
+        this._focusNode.focus();
+      }
+
+      this.fire('iron-overlay-opened');
+
+      this._squelchNextResize = true;
+      this.async(this.notifyResize);
+    },
+
+    _finishRenderClosed: function() {
+      // hide the overlay and remove the backdrop
+      this.resetFit();
+      this.style.display = 'none';
+      this._completeBackdrop();
+      this._manager.removeOverlay(this);
+
+      this._focusNode.blur();
+      // focus the next overlay, if there is one
+      this._manager.focusOverlay();
+
+      this.fire('iron-overlay-closed', this.closingReason);
+
+      this._squelchNextResize = true;
+      this.async(this.notifyResize);
+    },
+
+    _completeBackdrop: function() {
+      if (this.withBackdrop) {
+        this._manager.trackBackdrop(this);
+        this.backdropElement.complete();
+      }
+    },
+
+    _preparePositioning: function() {
+      this.style.transition = this.style.webkitTransition = 'none';
+      this.style.transform = this.style.webkitTransform = 'none';
+      this.style.display = '';
+    },
+
+    _finishPositioning: function() {
+      this.style.display = 'none';
+      this.style.transform = this.style.webkitTransform = '';
+      // force layout to avoid application of transform
+      /** @suppress {suspiciousCode} */ this.offsetWidth;
+      this.style.transition = this.style.webkitTransition = '';
+    },
+
+    _applyFocus: function() {
+      if (this.opened) {
+        if (!this.noAutoFocus) {
+          this._focusNode.focus();
+        }
+      } else {
+        this._focusNode.blur();
+        this._manager.focusOverlay();
+      }
+    },
+
+    _onCaptureClick: function(event) {
+      if (!this.noCancelOnOutsideClick &&
+          this._manager.currentOverlay() === this &&
+          Polymer.dom(event).path.indexOf(this) === -1) {
+        this.cancel();
+      }
+    },
+
+    _onCaptureKeydown: function(event) {
+      var ESC = 27;
+      if (!this.noCancelOnEscKey && (event.keyCode === ESC)) {
+        this.cancel();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+      }
+    },
+
+    _onIronResize: function() {
+      if (this._squelchNextResize) {
+        this._squelchNextResize = false;
+        return;
+      }
+      if (this.opened) {
+        this.refit();
+      }
+    }
+
+/**
+ * Fired after the `iron-overlay` opens.
+ * @event iron-overlay-opened
+ */
+
+/**
+ * Fired when the `iron-overlay` is canceled, but before it is closed.
+ * Cancel the event to prevent the `iron-overlay` from closing.
+ * @event iron-overlay-canceled
+ */
+
+/**
+ * Fired after the `iron-overlay` closes.
+ * @event iron-overlay-closed
+ * @param {{canceled: (boolean|undefined)}} set to the `closingReason` attribute
+ */
+  };
+
+  /** @polymerBehavior */
+  Polymer.IronOverlayBehavior = [Polymer.IronFitBehavior, Polymer.IronResizableBehavior, Polymer.IronOverlayBehaviorImpl];
+
+
+</script>
+
+
+
+
+
+
+
+
+<script>
+
+  /**
+   * Use `Polymer.NeonAnimationBehavior` to implement an animation.
+   * @polymerBehavior
+   */
+  Polymer.NeonAnimationBehavior = {
+
+    properties: {
+
+      /**
+       * Defines the animation timing.
+       */
+      animationTiming: {
+        type: Object,
+        value: function() {
+          return {
+            duration: 500,
+            easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+            fill: 'both'
+          }
+        }
+      }
+
+    },
+
+    registered: function() {
+      new Polymer.IronMeta({type: 'animation', key: this.is, value: this.constructor});
+    },
+
+    /**
+     * Do any animation configuration here.
+     */
+    // configure: function(config) {
+    // },
+
+    /**
+     * Returns the animation timing by mixing in properties from `config` to the defaults defined
+     * by the animation.
+     */
+    timingFromConfig: function(config) {
+      if (config.timing) {
+        for (var property in config.timing) {
+          this.animationTiming[property] = config.timing[property];
+        }
+      }
+      return this.animationTiming;
+    },
+
+    /**
+     * Sets `transform` and `transformOrigin` properties along with the prefixed versions.
+     */
+    setPrefixedProperty: function(node, property, value) {
+      var map = {
+        'transform': ['webkitTransform'],
+        'transformOrigin': ['mozTransformOrigin', 'webkitTransformOrigin']
+      };
+      var prefixes = map[property];
+      for (var prefix, index = 0; prefix = prefixes[index]; index++) {
+        node.style[prefix] = value;
+      }
+      node.style[property] = value;
+    },
+
+    /**
+     * Called when the animation finishes.
+     */
+    complete: function() {}
+
+  };
+
+</script>
+
+
+
+
+
+<script src="packages/polymer_elements/src/web-animations-js/web-animations-next-lite.min.js"></script>
+
+
+<!--
+`<opaque-animation>` makes an element `opacity:1` for the duration of the animation. Used to prevent
+webkit/safari from drawing a frame before an animation for elements that animate from display:none.
+-->
+
+<script>
+
+  Polymer({
+
+    is: 'opaque-animation',
+
+    behaviors: [
+      Polymer.NeonAnimationBehavior
+    ],
+
+    configure: function(config) {
+      var node = config.node;
+      node.style.opacity = '0';
+      this._effect = new KeyframeEffect(node, [
+        {'opacity': '1'},
+        {'opacity': '1'}
+      ], this.timingFromConfig(config));
+      return this._effect;
+    },
+
+    complete: function(config) {
+      config.node.style.opacity = '';
+    }
+
+  });
+
+</script>
+
+
+
+
+
+
+<script>
+
+  /**
+   * `Polymer.NeonAnimatableBehavior` is implemented by elements containing animations for use with
+   * elements implementing `Polymer.NeonAnimationRunnerBehavior`.
+   * @polymerBehavior
+   */
+  Polymer.NeonAnimatableBehavior = {
+
+    properties: {
+
+      /**
+       * Animation configuration. See README for more info.
+       */
+      animationConfig: {
+        type: Object
+      },
+
+      /**
+       * Convenience property for setting an 'entry' animation. Do not set `animationConfig.entry`
+       * manually if using this. The animated node is set to `this` if using this property.
+       */
+      entryAnimation: {
+        observer: '_entryAnimationChanged',
+        type: String
+      },
+
+      /**
+       * Convenience property for setting an 'exit' animation. Do not set `animationConfig.exit`
+       * manually if using this. The animated node is set to `this` if using this property.
+       */
+      exitAnimation: {
+        observer: '_exitAnimationChanged',
+        type: String
+      }
+
+    },
+
+    _entryAnimationChanged: function() {
+      this.animationConfig = this.animationConfig || {};
+      if (this.entryAnimation !== 'fade-in-animation') {
+        // insert polyfill hack
+        this.animationConfig['entry'] = [{
+          name: 'opaque-animation',
+          node: this
+        }, {
+          name: this.entryAnimation,
+          node: this
+        }];
+      } else {
+        this.animationConfig['entry'] = [{
+          name: this.entryAnimation,
+          node: this
+        }];
+      }
+    },
+
+    _exitAnimationChanged: function() {
+      this.animationConfig = this.animationConfig || {};
+      this.animationConfig['exit'] = [{
+        name: this.exitAnimation,
+        node: this
+      }];
+    },
+
+    _copyProperties: function(config1, config2) {
+      // shallowly copy properties from config2 to config1
+      for (var property in config2) {
+        config1[property] = config2[property];
+      }
+    },
+
+    _cloneConfig: function(config) {
+      var clone = {
+        isClone: true
+      };
+      this._copyProperties(clone, config);
+      return clone;
+    },
+
+    _getAnimationConfigRecursive: function(type, map, allConfigs) {
+      if (!this.animationConfig) {
+        return;
+      }
+
+      // type is optional
+      var thisConfig;
+      if (type) {
+        thisConfig = this.animationConfig[type];
+      } else {
+        thisConfig = this.animationConfig;
+      }
+
+      if (!Array.isArray(thisConfig)) {
+        thisConfig = [thisConfig];
+      }
+
+      // iterate animations and recurse to process configurations from child nodes
+      if (thisConfig) {
+        for (var config, index = 0; config = thisConfig[index]; index++) {
+          if (config.animatable) {
+            config.animatable._getAnimationConfigRecursive(config.type || type, map, allConfigs);
+          } else {
+            if (config.id) {
+              var cachedConfig = map[config.id];
+              if (cachedConfig) {
+                // merge configurations with the same id, making a clone lazily
+                if (!cachedConfig.isClone) {
+                  map[config.id] = this._cloneConfig(cachedConfig)
+                  cachedConfig = map[config.id];
+                }
+                this._copyProperties(cachedConfig, config);
+              } else {
+                // put any configs with an id into a map
+                map[config.id] = config;
+              }
+            } else {
+              allConfigs.push(config);
+            }
+          }
+        }
+      }
+    },
+
+    /**
+     * An element implementing `Polymer.NeonAnimationRunnerBehavior` calls this method to configure
+     * an animation with an optional type. Elements implementing `Polymer.NeonAnimatableBehavior`
+     * should define the property `animationConfig`, which is either a configuration object
+     * or a map of animation type to array of configuration objects.
+     */
+    getAnimationConfig: function(type) {
+      var map = {};
+      var allConfigs = [];
+      this._getAnimationConfigRecursive(type, map, allConfigs);
+      // append the configurations saved in the map to the array
+      for (var key in map) {
+        allConfigs.push(map[key]);
+      }
+      return allConfigs;
+    }
+
+  };
+
+</script>
+
+
+
+
+
+
+
+<script>
+
+  /**
+   * `Polymer.NeonAnimationRunnerBehavior` adds a method to run animations.
+   *
+   * @polymerBehavior Polymer.NeonAnimationRunnerBehavior
+   */
+  Polymer.NeonAnimationRunnerBehaviorImpl = {
+
+    properties: {
+
+      _animationMeta: {
+        type: Object,
+        value: function() {
+          return new Polymer.IronMeta({type: 'animation'});
+        }
+      },
+
+      /** @type {?Object} */
+      _player: {
+        type: Object
+      }
+
+    },
+
+    _configureAnimationEffects: function(allConfigs) {
+      var allAnimations = [];
+      if (allConfigs.length > 0) {
+        for (var config, index = 0; config = allConfigs[index]; index++) {
+          var animationConstructor = this._animationMeta.byKey(config.name);
+          if (animationConstructor) {
+            var animation = animationConstructor && new animationConstructor();
+            var effect = animation.configure(config);
+            if (effect) {
+              allAnimations.push({
+                animation: animation,
+                config: config,
+                effect: effect
+              });
+            }
+          } else {
+            console.warn(this.is + ':', config.name, 'not found!');
+          }
+        }
+      }
+      return allAnimations;
+    },
+
+    _runAnimationEffects: function(allEffects) {
+      return document.timeline.play(new GroupEffect(allEffects));
+    },
+
+    _completeAnimations: function(allAnimations) {
+      for (var animation, index = 0; animation = allAnimations[index]; index++) {
+        animation.animation.complete(animation.config);
+      }
+    },
+
+    /**
+     * Plays an animation with an optional `type`.
+     * @param {string=} type
+     * @param {!Object=} cookie
+     */
+    playAnimation: function(type, cookie) {
+      var allConfigs = this.getAnimationConfig(type);
+      if (!allConfigs) {
+        return;
+      }
+      var allAnimations = this._configureAnimationEffects(allConfigs);
+      var allEffects = allAnimations.map(function(animation) {
+        return animation.effect;
+      });
+
+      if (allEffects.length > 0) {
+        this._player = this._runAnimationEffects(allEffects);
+        this._player.onfinish = function() {
+          this._completeAnimations(allAnimations);
+
+          if (this._player) {
+            this._player.cancel();
+            this._player = null;
+          }
+
+          this.fire('neon-animation-finish', cookie, {bubbles: false});
+        }.bind(this);
+
+      } else {
+        this.fire('neon-animation-finish', cookie, {bubbles: false});
+      }
+    },
+
+    /**
+     * Cancels the currently running animation.
+     */
+    cancelAnimation: function() {
+      if (this._player) {
+        this._player.cancel();
+      }
+    }
+  };
+
+  /** @polymerBehavior Polymer.NeonAnimationRunnerBehavior */
+  Polymer.NeonAnimationRunnerBehavior = [
+    Polymer.NeonAnimatableBehavior,
+    Polymer.NeonAnimationRunnerBehaviorImpl
+  ];
+</script>
 
 
 
@@ -18023,6 +17613,177 @@ respectively.
 
 
 
+
+
+<!--
+`PaperItemBehavior` is a convenience behavior shared by <paper-item> and
+<paper-icon-item> that manages the shared control states and attributes of
+the items.
+-->
+
+<script>
+  /** @polymerBehavior Polymer.PaperItemBehavior */
+  Polymer.PaperItemBehaviorImpl = {
+    hostAttributes: {
+      role: 'option',
+      tabindex: '0'
+    }
+  };
+
+  /** @polymerBehavior */
+  Polymer.PaperItemBehavior = [
+    Polymer.IronButtonState,
+    Polymer.IronControlState,
+    Polymer.PaperItemBehaviorImpl
+  ];
+</script>
+
+
+
+
+
+
+
+
+<dom-module id="paper-item-shared-styles">
+  <template>
+    <style>
+      :host {
+        display: block;
+        position: relative;
+        min-height: var(--paper-item-min-height, 48px);
+        padding: 0px 16px;
+      }
+
+      :host([hidden]) {
+        display: none !important;
+      }
+
+      :host(.iron-selected) {
+        font-weight: var(--paper-item-selected-weight, bold);
+
+        @apply(--paper-item-selected);
+      }
+
+      :host([disabled]) {
+        color: var(--paper-item-disabled-color, --disabled-text-color);
+
+        @apply(--paper-item-disabled);
+      }
+
+      :host(:focus) {
+        position: relative;
+        outline: 0;
+
+        @apply(--paper-item-focused);
+      }
+
+      :host(:focus):before {
+        @apply(--layout-fit);
+
+        background: currentColor;
+        content: '';
+        opacity: var(--dark-divider-opacity);
+        pointer-events: none;
+
+        @apply(--paper-item-focused-before);
+      }
+    </style>
+  </template>
+</dom-module>
+
+
+
+
+
+
+
+
+
+
+<!--
+Material design: [Lists](https://www.google.com/design/spec/components/lists.html)
+
+`<paper-item>` is an interactive list item. By default, it is a horizontal flexbox.
+
+    <paper-item>Item</paper-item>
+
+Use this element with `<paper-item-body>` to make Material Design styled two-line and three-line
+items.
+
+    <paper-item>
+      <paper-item-body two-line>
+        <div>Show your status</div>
+        <div secondary>Your status is visible to everyone</div>
+      </paper-item-body>
+      <iron-icon icon="warning"></iron-icon>
+    </paper-item>
+
+### Styling
+
+The following custom properties and mixins are available for styling:
+
+Custom property               | Description                                  | Default
+------------------------------|----------------------------------------------|----------
+`--paper-item-min-height`     | Minimum height of the item                   | `48px`
+`--paper-item`                | Mixin applied to the item                    | `{}`
+`--paper-item-selected-weight`| The font weight of a selected item           | `bold`
+`--paper-item-selected`       | Mixin applied to selected paper-items        | `{}`
+`--paper-item-disabled-color` | The color for disabled paper-items           | `--disabled-text-color`
+`--paper-item-disabled`       | Mixin applied to disabled paper-items        | `{}`
+`--paper-item-focused`        | Mixin applied to focused paper-items         | `{}`
+`--paper-item-focused-before` | Mixin applied to :before focused paper-items | `{}`
+
+### Accessibility
+
+This element has `role="listitem"` by default. Depending on usage, it may be more appropriate to set
+`role="menuitem"`, `role="menuitemcheckbox"` or `role="menuitemradio"`.
+
+    <paper-item role="menuitemcheckbox">
+      <paper-item-body>
+        Show your status
+      </paper-item-body>
+      <paper-checkbox></paper-checkbox>
+    </paper-item>
+
+@group Paper Elements
+@element paper-item
+@demo demo/index.html
+-->
+
+<dom-module id="paper-item">
+  <template>
+    <style include="paper-item-shared-styles"></style>
+    <style>
+      :host {
+        @apply(--layout-horizontal);
+        @apply(--layout-center);
+        @apply(--paper-font-subhead);
+
+        @apply(--paper-item);
+      }
+    </style>
+
+    <content></content>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'paper-item',
+
+      behaviors: [
+        Polymer.PaperItemBehavior
+      ]
+    });
+  </script>
+</dom-module>
+
+
+
+
+
+
+
 <script>
 
   /**
@@ -19020,27 +18781,233 @@ of a menu item will also focus it.
 
 
 
-<!--
-`PaperItemBehavior` is a convenience behavior shared by <paper-item> and
-<paper-icon-item> that manages the shared control states and attributes of
-the items.
--->
+
+
 
 <script>
-  /** @polymerBehavior Polymer.PaperItemBehavior */
-  Polymer.PaperItemBehaviorImpl = {
+
+/**
+Use `Polymer.PaperDialogBehavior` and `paper-dialog-shared-styles.html` to implement a Material Design
+dialog.
+
+For example, if `<paper-dialog-impl>` implements this behavior:
+
+    <paper-dialog-impl>
+        <h2>Header</h2>
+        <div>Dialog body</div>
+        <div class="buttons">
+            <paper-button dialog-dismiss>Cancel</paper-button>
+            <paper-button dialog-confirm>Accept</paper-button>
+        </div>
+    </paper-dialog-impl>
+
+`paper-dialog-shared-styles.html` provide styles for a header, content area, and an action area for buttons.
+Use the `<h2>` tag for the header and the `buttons` class for the action area. You can use the
+`paper-dialog-scrollable` element (in its own repository) if you need a scrolling content area.
+
+Use the `dialog-dismiss` and `dialog-confirm` attributes on interactive controls to close the
+dialog. If the user dismisses the dialog with `dialog-confirm`, the `closingReason` will update
+to include `confirmed: true`.
+
+### Styling
+
+The following custom properties and mixins are available for styling.
+
+Custom property | Description | Default
+----------------|-------------|----------
+`--paper-dialog-background-color` | Dialog background color                     | `--primary-background-color`
+`--paper-dialog-color`            | Dialog foreground color                     | `--primary-text-color`
+`--paper-dialog`                  | Mixin applied to the dialog                 | `{}`
+`--paper-dialog-title`            | Mixin applied to the title (`<h2>`) element | `{}`
+`--paper-dialog-button-color`     | Button area foreground color                | `--default-primary-color`
+
+### Accessibility
+
+This element has `role="dialog"` by default. Depending on the context, it may be more appropriate
+to override this attribute with `role="alertdialog"`.
+
+If `modal` is set, the element will set `aria-modal` and prevent the focus from exiting the element.
+It will also ensure that focus remains in the dialog.
+
+The `aria-labelledby` attribute will be set to the header element, if one exists.
+
+@hero hero.svg
+@demo demo/index.html
+@polymerBehavior Polymer.PaperDialogBehavior
+*/
+
+  Polymer.PaperDialogBehaviorImpl = {
+
     hostAttributes: {
-      role: 'option',
-      tabindex: '0'
+      'role': 'dialog',
+      'tabindex': '-1'
+    },
+
+    properties: {
+
+      /**
+       * If `modal` is true, this implies `no-cancel-on-outside-click` and `with-backdrop`.
+       */
+      modal: {
+        observer: '_modalChanged',
+        type: Boolean,
+        value: false
+      },
+
+      /** @type {?Node} */
+      _lastFocusedElement: {
+        type: Object
+      },
+
+      _boundOnFocus: {
+        type: Function,
+        value: function() {
+          return this._onFocus.bind(this);
+        }
+      },
+
+      _boundOnBackdropClick: {
+        type: Function,
+        value: function() {
+          return this._onBackdropClick.bind(this);
+        }
+      }
+
+    },
+
+    listeners: {
+      'tap': '_onDialogClick',
+      'iron-overlay-opened': '_onIronOverlayOpened',
+      'iron-overlay-closed': '_onIronOverlayClosed'
+    },
+
+    attached: function() {
+      this._observer = this._observe(this);
+      this._updateAriaLabelledBy();
+    },
+
+    detached: function() {
+      if (this._observer) {
+        this._observer.disconnect();
+      }
+    },
+
+    _observe: function(node) {
+      var observer = new MutationObserver(function() {
+        this._updateAriaLabelledBy();
+      }.bind(this));
+      observer.observe(node, {
+        childList: true,
+        subtree: true
+      });
+      return observer;
+    },
+
+    _modalChanged: function() {
+      if (this.modal) {
+        this.setAttribute('aria-modal', 'true');
+      } else {
+        this.setAttribute('aria-modal', 'false');
+      }
+      // modal implies noCancelOnOutsideClick and withBackdrop if true, don't overwrite
+      // those properties otherwise.
+      if (this.modal) {
+        this.noCancelOnOutsideClick = true;
+        this.withBackdrop = true;
+      }
+    },
+
+    _updateAriaLabelledBy: function() {
+      var header = Polymer.dom(this).querySelector('h2');
+      if (!header) {
+        this.removeAttribute('aria-labelledby');
+        return;
+      }
+      var headerId = header.getAttribute('id');
+      if (headerId && this.getAttribute('aria-labelledby') === headerId) {
+        return;
+      }
+      // set aria-describedBy to the header element
+      var labelledById;
+      if (headerId) {
+        labelledById = headerId;
+      } else {
+        labelledById = 'paper-dialog-header-' + new Date().getUTCMilliseconds();
+        header.setAttribute('id', labelledById);
+      }
+      this.setAttribute('aria-labelledby', labelledById);
+    },
+
+    _updateClosingReasonConfirmed: function(confirmed) {
+      this.closingReason = this.closingReason || {};
+      this.closingReason.confirmed = confirmed;
+    },
+
+    _onDialogClick: function(event) {
+      var target = event.target;
+      while (target && target !== this) {
+        if (target.hasAttribute) {
+          if (target.hasAttribute('dialog-dismiss')) {
+            this._updateClosingReasonConfirmed(false);
+            this.close();
+            break;
+          } else if (target.hasAttribute('dialog-confirm')) {
+            this._updateClosingReasonConfirmed(true);
+            this.close();
+            break;
+          }
+        }
+        target = target.parentNode;
+      }
+    },
+
+    _onIronOverlayOpened: function() {
+      if (this.modal) {
+        document.body.addEventListener('focus', this._boundOnFocus, true);
+        this.backdropElement.addEventListener('click', this._boundOnBackdropClick);
+      }
+    },
+
+    _onIronOverlayClosed: function() {
+      document.body.removeEventListener('focus', this._boundOnFocus, true);
+      this.backdropElement.removeEventListener('click', this._boundOnBackdropClick);
+    },
+
+    _onFocus: function(event) {
+      if (this.modal) {
+        var target = event.target;
+        while (target && target !== this && target !== document.body) {
+          target = target.parentNode;
+        }
+        if (target) {
+          if (target === document.body) {
+            if (this._lastFocusedElement) {
+              this._lastFocusedElement.focus();
+            } else {
+              this._focusNode.focus();
+            }
+          } else {
+            this._lastFocusedElement = event.target;
+          }
+        }
+      }
+    },
+
+    _onBackdropClick: function() {
+      if (this.modal) {
+        if (this._lastFocusedElement) {
+          this._lastFocusedElement.focus();
+        } else {
+          this._focusNode.focus();
+        }
+      }
     }
+
   };
 
   /** @polymerBehavior */
-  Polymer.PaperItemBehavior = [
-    Polymer.IronButtonState,
-    Polymer.IronControlState,
-    Polymer.PaperItemBehaviorImpl
-  ];
+  Polymer.PaperDialogBehavior = [Polymer.IronOverlayBehavior, Polymer.PaperDialogBehaviorImpl];
+
 </script>
 
 
@@ -19049,57 +19016,60 @@ the items.
 
 
 
-
-<dom-module id="paper-item-shared-styles">
+<dom-module id="paper-dialog-shared-styles">
   <template>
     <style>
       :host {
         display: block;
+        margin: 24px 40px;
+        -webkit-overflow-scrolling: touch;
+
+        background: var(--paper-dialog-background-color, --primary-background-color);
+        color: var(--paper-dialog-color, --primary-text-color);
+
+        @apply(--paper-font-body1);
+        @apply(--shadow-elevation-16dp);
+        @apply(--paper-dialog);
+      }
+
+      :host > ::content > * {
+        margin-top: 20px;
+        padding: 0 24px;
+      }
+
+      :host > ::content > .no-padding {
+        padding: 0;
+      }
+
+      :host > ::content > *:first-child {
+        margin-top: 24px;
+      }
+
+      :host > ::content > *:last-child {
+        margin-bottom: 24px;
+      }
+
+      :host > ::content h2 {
         position: relative;
-        min-height: var(--paper-item-min-height, 48px);
-        padding: 0px 16px;
+        margin: 0;
+        @apply(--paper-font-title);
+
+        @apply(--paper-dialog-title);
       }
 
-      :host([hidden]) {
-        display: none !important;
-      }
-
-      :host(.iron-selected) {
-        font-weight: var(--paper-item-selected-weight, bold);
-
-        @apply(--paper-item-selected);
-      }
-
-      :host([disabled]) {
-        color: var(--paper-item-disabled-color, --disabled-text-color);
-
-        @apply(--paper-item-disabled);
-      }
-
-      :host(:focus) {
+      :host > ::content .buttons {
         position: relative;
-        outline: 0;
+        padding: 8px 8px 8px 24px;
+        margin: 0;
 
-        @apply(--paper-item-focused);
-      }
+        color: var(--paper-dialog-button-color, --default-primary-color);
 
-      :host(:focus):before {
-        @apply(--layout-fit);
-
-        background: currentColor;
-        content: '';
-        opacity: var(--dark-divider-opacity);
-        pointer-events: none;
-
-        @apply(--paper-item-focused-before);
+        @apply(--layout-horizontal);
+        @apply(--layout-end-justified);
       }
     </style>
   </template>
 </dom-module>
-
-
-
-
 
 
 
@@ -19107,81 +19077,111 @@ the items.
 
 
 <!--
-Material design: [Lists](https://www.google.com/design/spec/components/lists.html)
+Material design: [Dialogs](https://www.google.com/design/spec/components/dialogs.html)
 
-`<paper-item>` is an interactive list item. By default, it is a horizontal flexbox.
+`<paper-dialog>` is a dialog with Material Design styling and optional animations when it is
+opened or closed. It provides styles for a header, content area, and an action area for buttons.
+You can use the `<paper-dialog-scrollable>` element (in its own repository) if you need a scrolling
+content area. See `Polymer.PaperDialogBehavior` for specifics.
 
-    <paper-item>Item</paper-item>
+For example, the following code implements a dialog with a header, scrolling content area and
+buttons.
 
-Use this element with `<paper-item-body>` to make Material Design styled two-line and three-line
-items.
-
-    <paper-item>
-      <paper-item-body two-line>
-        <div>Show your status</div>
-        <div secondary>Your status is visible to everyone</div>
-      </paper-item-body>
-      <iron-icon icon="warning"></iron-icon>
-    </paper-item>
+    <paper-dialog>
+      <h2>Header</h2>
+      <paper-dialog-scrollable>
+        Lorem ipsum...
+      </paper-dialog-scrollable>
+      <div class="buttons">
+        <paper-button dialog-dismiss>Cancel</paper-button>
+        <paper-button dialog-confirm>Accept</paper-button>
+      </div>
+    </paper-dialog>
 
 ### Styling
 
-The following custom properties and mixins are available for styling:
+See the docs for `Polymer.PaperDialogBehavior` for the custom properties available for styling
+this element.
 
-Custom property               | Description                                  | Default
-------------------------------|----------------------------------------------|----------
-`--paper-item-min-height`     | Minimum height of the item                   | `48px`
-`--paper-item`                | Mixin applied to the item                    | `{}`
-`--paper-item-selected-weight`| The font weight of a selected item           | `bold`
-`--paper-item-selected`       | Mixin applied to selected paper-items        | `{}`
-`--paper-item-disabled-color` | The color for disabled paper-items           | `--disabled-text-color`
-`--paper-item-disabled`       | Mixin applied to disabled paper-items        | `{}`
-`--paper-item-focused`        | Mixin applied to focused paper-items         | `{}`
-`--paper-item-focused-before` | Mixin applied to :before focused paper-items | `{}`
+### Animations
+
+Set the `entry-animation` and/or `exit-animation` attributes to add an animation when the dialog
+is opened or closed. See the documentation in
+[PolymerElements/neon-animation](https://github.com/PolymerElements/neon-animation) for more info.
+
+For example:
+
+    <link rel="import" href="components/neon-animation/animations/scale-up-animation.html">
+    <link rel="import" href="components/neon-animation/animations/fade-out-animation.html">
+
+    <paper-dialog entry-animation="scale-up-animation"
+                  exit-animation="fade-out-animation">
+      <h2>Header</h2>
+      <div>Dialog body</div>
+    </paper-dialog>
 
 ### Accessibility
 
-This element has `role="listitem"` by default. Depending on usage, it may be more appropriate to set
-`role="menuitem"`, `role="menuitemcheckbox"` or `role="menuitemradio"`.
-
-    <paper-item role="menuitemcheckbox">
-      <paper-item-body>
-        Show your status
-      </paper-item-body>
-      <paper-checkbox></paper-checkbox>
-    </paper-item>
+See the docs for `Polymer.PaperDialogBehavior` for accessibility features implemented by this
+element.
 
 @group Paper Elements
-@element paper-item
+@element paper-dialog
+@hero hero.svg
 @demo demo/index.html
 -->
 
-<dom-module id="paper-item">
+<dom-module id="paper-dialog">
   <template>
-    <style include="paper-item-shared-styles"></style>
-    <style>
-      :host {
-        @apply(--layout-horizontal);
-        @apply(--layout-center);
-        @apply(--paper-font-subhead);
-
-        @apply(--paper-item);
-      }
-    </style>
-
+    <style include="paper-dialog-shared-styles"></style>
     <content></content>
   </template>
-
-  <script>
-    Polymer({
-      is: 'paper-item',
-
-      behaviors: [
-        Polymer.PaperItemBehavior
-      ]
-    });
-  </script>
 </dom-module>
+
+<script>
+
+(function() {
+
+  Polymer({
+
+    is: 'paper-dialog',
+
+    behaviors: [
+      Polymer.PaperDialogBehavior,
+      Polymer.NeonAnimationRunnerBehavior
+    ],
+
+    listeners: {
+      'neon-animation-finish': '_onNeonAnimationFinish'
+    },
+
+    _renderOpened: function() {
+      if (this.withBackdrop) {
+        this.backdropElement.open();
+      }
+      this.playAnimation('entry');
+    },
+
+    _renderClosed: function() {
+      if (this.withBackdrop) {
+        this.backdropElement.close();
+      }
+      this.playAnimation('exit');
+    },
+
+    _onNeonAnimationFinish: function() {
+      if (this.opened) {
+        this._finishRenderOpened();
+      } else {
+        this._finishRenderClosed();
+      }
+    }
+
+  });
+
+})();
+
+</script>
 
 
 

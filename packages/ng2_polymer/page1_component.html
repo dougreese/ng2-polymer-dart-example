@@ -7,7 +7,7 @@
       display: block;
       padding: 24px;
       font-family: 'Roboto', 'Noto', sans-serif;
-      font-size: 14px;
+      font-size: 16px;
     }
     div#table {
     }
@@ -17,27 +17,31 @@
       border-top: 1px solid #ccc;
       border-left: 1px solid #ccc;
       border-right: 1px solid #ccc;
-
-      /*max-height: 100px;*/
-      /*margin: 20px 20px auto 10px;*/
     }
     .card-content {
       padding: 16px;
       @apply(--layout-horizontal);
     }
-    .name {
+    #name {
       width: 200px;
       font-weight: bold;
     }
-    .moreinfo {
+    #moreinfo {
       width: 200px;
+      height: 60px;
     }
-    .userid {
-      width: 300;
+    div.content-item {
+      padding: 8px;
+      height: 60px;
     }
-    .edituser
-    {
+    #userid {
+      width: 330px;
+    }
+    #edituser {
       width: 75px;
+    }
+    #editmoreinfo > iron-icon {
+      cursor: pointer;
     }
     paper-header-panel {
       margin: 0;
@@ -47,7 +51,7 @@
       background-color: #0000ff;
     }
     .ok {
-      background-color: #009900;
+      background-color: #close;
     }
     .warning {
       background-color: #ff9900;
@@ -64,17 +68,24 @@
       <paper-toolbar class="info"><h3>{{group.name}}</h3></paper-toolbar>
       <paper-material *ngFor="let currentUser of group.users" class="card" [style.height.px]="contentHeight">
         <div class="card-content layout horizontal wrap">
-          <div class="name">
-            {{currentUser.name}}
+          <div class="content-item layout vertical center-justified" id="name">
+            <span>{{currentUser.name}}</span>
           </div>
-          <div class="moreinfo">
-            {{currentUser.moreInfo}}
+          <div class="content-item layout vertical center-justified" id="moreinfo">
+            <span *ngIf="editingUser(currentUser.id) == false">{{currentUser.moreInfo}}</span>
+            <div *ngIf="editingUser(currentUser.id) == true">
+              <select-in-place [selectValInit]="currentUser.moreInfo" (updated)="onUpdateInPlace($event)"></select-in-place>
+            </div>
+          </div>
+          <div class="content-item layout vertical center-justified" id="editmoreinfo">
+            <iron-icon *ngIf="editingUser(currentUser.id) == false" (click)="edit(currentUser.id)" icon="create" class="material-icons"></iron-icon>
+            <iron-icon *ngIf="editingUser(currentUser.id) == true" (click)="cancel(currentUser.id)" icon="close" class="material-icons"></iron-icon>
           </div>
           <!-- hide user Id when width is less than threshold -->
-          <div #userId class="userid" *ngIf="mainWidth > 800">
+          <div #userId class="content-item layout vertical center-justified" id="userid" *ngIf="mainWidth > 800">
             Id: {{currentUser.id}}
           </div>
-          <div class="edituser">
+          <div class="content-item layout vertical center-justified" id="edituser">
             <edit-dialog [user]="currentUser" (updated)="onUpdated($event)"></edit-dialog>
           </div>
         </div>
