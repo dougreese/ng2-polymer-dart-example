@@ -30,7 +30,6 @@ class EditForm {
 
   String newName;
   int selected;
-  String _selectedValue;
 
   List<String> options = ['one', 'two', 'three', 'four', 'five'];
 

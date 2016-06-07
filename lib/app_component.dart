@@ -25,8 +25,8 @@ import 'package:polymer_elements/paper_icon_button.dart';
   directives: const [ROUTER_DIRECTIVES, SideNavComponent]
 )
 @RouteConfig(const [
-  const Route(path: '/', name: 'Home', component: HomeComponent),
-  const Route(path: '/page1', name: 'Page1', component: Page1Component),
+  const Route(path: '/', name: 'Home', component: Page1Component),
+  const Route(path: '/page1', name: 'Page1', component: HomeComponent),
   const Route(path: '/page2', name: 'Page2', component: Page2Component),
   const Route(path: '/page3', name: 'Page3', component: Page3Component),
   const Route(path: '/help', name: 'Help', component: HelpComponent),

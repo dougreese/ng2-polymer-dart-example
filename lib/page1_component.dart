@@ -4,13 +4,16 @@ import 'dart:async';
 import 'package:angular2/core.dart';
 import 'package:angular2/router.dart';
 
+import 'package:polymer/polymer.dart';
 import 'package:logging/logging.dart' show Logger;
 
+import 'select_in_place.dart';
 import 'edit_dialog.dart';
 import 'user.dart';
 
 import 'package:polymer_elements/iron_flex_layout.dart';
 import 'package:polymer_elements/paper_material.dart';
+import 'package:polymer_elements/iron_icons.dart';
 
 class GroupUsers {
 	String name;
@@ -43,13 +46,22 @@ class GroupUsers {
     return true;
   }
 
+  bool updateUserInfo(String id, String info) {
+    if (!userMap.containsKey(id)) {
+      return false;
+    }
+
+    userMap[id].moreInfo = info;
+    return true;
+  }
+
   String toString() => "$name: ${users}";
 }
 
 @Component(
 	selector: 'page1',
 	templateUrl: 'page1_component.html',
-  directives: const [EditDialog]
+  directives: const [EditDialog, SelectInPlace]
 )
 class Page1Component implements OnInit, OnActivate, OnDeactivate, OnReuse, CanDeactivate, CanReuse {
 
@@ -59,8 +71,11 @@ class Page1Component implements OnInit, OnActivate, OnDeactivate, OnReuse, CanDe
   Element mainTable;
   int mainWidth = 0;
   NgZone _zone;
+  String _editingUser = '';
 
   @ViewChild('userId') ElementRef userIdDisplay;
+
+  bool editingUser(String id) => _editingUser == id;
 
 	Page1Component(this._zone) {
 		groups = new List<GroupUsers>();
@@ -89,6 +104,19 @@ class Page1Component implements OnInit, OnActivate, OnDeactivate, OnReuse, CanDe
     initResizeListener();
 	}
 
+  void initResizeListener() {
+    // grab resize events from main window
+    Timer.run(() {
+      mainTable = querySelector('#maintable');
+      if (null == mainTable) {
+        _logger.warning("Could not initialize resize listener, #maintable not found");
+      } else {
+        mainWidth = mainTable.clientWidth;
+        window.addEventListener('resize', onResize);
+      }
+    });
+  }
+
   void onResize(e) {
     // set the main width and update view
     mainWidth = mainTable.clientWidth;
@@ -111,17 +139,33 @@ class Page1Component implements OnInit, OnActivate, OnDeactivate, OnReuse, CanDe
     }
   }
 
-  void initResizeListener() {
-    // grab resize events from main window
-    Timer.run(() {
-      mainTable = querySelector("#maintable");
-      mainWidth = mainTable.clientWidth;
-      window.addEventListener('resize', onResize);
-    });
+  void updateUserInfo(String id, String info) {
+    for (GroupUsers g in groups) {
+      if (g.hasUser(id)) {
+        g.updateUserInfo(id, info);
+      }
+    }
   }
 
+  void edit(String userId) {
+    _logger.fine("edit: $userId");
+    _editingUser = userId;
+  }
+
+  void cancel(String userId) {
+    _logger.fine("cancel: $userId");
+    _editingUser = '';
+  }
+
+  void onUpdateInPlace(e) {
+    _logger.fine("Component 1 updated in place: $e");
+    updateUserInfo(_editingUser, e);
+    _editingUser = '';
+  }
+
+
   dynamic routerOnActivate(ComponentInstruction next, ComponentInstruction prev) {
-    _logger.fine("Page1 routerOnActivate - prev: ${prev.routeName}, next: ${next.routeName}");
+    // _logger.fine("Page1 routerOnActivate - prev: ${prev.routeName}, next: ${next.routeName}");
     return true;
   }
 

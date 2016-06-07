@@ -1,0 +1,22 @@
+<dom-module id="select_in_place">
+  <style is="custom-style">
+    paper-dropdown-menu {
+      width: 150px;
+    }
+		paper-input-container {
+			padding: 0;
+		}
+  </style>
+
+  <form #selectForm="ngForm" (ngSubmit)="submit()">
+		<paper-dropdown-menu #selectValue label="Choose Info"
+												 [ngModel]="selectedValue"  ngControl="valueCtrl" required ngDefaultControl>
+		  <paper-menu id="itemMenu" #itemMenu class="dropdown-content" [(selected)]="selected">
+		    <paper-item *ngFor="let opt of options">{{opt}}</paper-item>
+		  </paper-menu>
+		</paper-dropdown-menu>
+    <iron-icon (click)="save()" icon="done" class="material-icons"
+							 [style.cursor]="selectForm.form.valid ? 'pointer' : 'not-allowed'"
+							 [style.color]="selectForm.form.valid ? 'darkgreen' : 'darkred'"></iron-icon>
+	</form>
+</dom-module>
