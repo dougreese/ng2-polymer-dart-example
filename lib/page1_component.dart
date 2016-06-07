@@ -21,7 +21,7 @@ class GroupUsers {
 
   // header + shadow + (num items * (height of one item + border))
   // hard coded values for demo purposes
-  int get groupHeight => 64 + 5 + this.userMap.length * (100 + 1);
+  int get groupHeight => 64 + 8 + this.userMap.length * (100 + 1);
 
   List<User> get users => userMap.values;
 
